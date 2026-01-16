@@ -209,3 +209,31 @@ Progress: 4/31
 
 ### Iteration 5 - 2026-01-16T16:39:48-06:00
 Progress: 5/31
+
+### Iteration 5 - 2026-01-16T16:40:31-06:00
+Progress: 5/31
+
+### Story: scrape-02 - Implement HTML fetcher with rate limiting
+**Completed:** 2026-01-16T16:41:37-06:00
+
+**What was implemented:**
+- Created src/scraper/fetcher.py with fetch_page() function and Fetcher class
+- Rate limiting: configurable delay between requests (default 1 second)
+- Fetcher class maintains rate limit state across multiple requests
+- fetch_page() convenience function for one-off fetches
+- Proper error handling for Timeout, HTTPError, and RequestException
+- Custom User-Agent header identifying the scraper
+- Context manager support (with statement) for Fetcher class
+- Uses Python logging module for status messages
+
+**Files modified:**
+- src/scraper/fetcher.py (created)
+
+**Learnings for future iterations:**
+- Fetcher class is preferred for multiple requests (maintains session and rate limit state)
+- fetch_page() is a simpler interface for single requests
+- Config settings: scraper.delay (1.0s), scraper.timeout (30s)
+- Session-based fetcher allows connection reuse for better performance
+
+### Iteration 6 - 2026-01-16T16:41:37-06:00
+Progress: 6/31

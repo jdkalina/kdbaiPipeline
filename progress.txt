@@ -349,3 +349,31 @@ Progress: 9/31
 
 ### Iteration 10 - 2026-01-16T17:15:00-06:00
 Progress: 10/31
+
+### Iteration 10 - 2026-01-16T16:49:21-06:00
+Progress: 10/31
+
+### Story: scrape-07 - Implement status database operations
+**Completed:** 2026-01-16T17:20:00-06:00
+
+**What was implemented:**
+- Added `insert_scraped_file()` function to insert new file records with auto-generated UUID file_id and ISO timestamp
+- Added `get_file_by_url()` function to retrieve file records by URL (returns None if not found)
+- Added `update_status()` function to update file status with optional error_message
+- Added `get_files_by_status()` function to retrieve all files matching a status
+- Added `update_content_hash()` function as bonus utility for idempotency (updates hash and scraped_at timestamp)
+- All functions use parameterized queries to prevent SQL injection
+- Added uuid and datetime imports
+
+**Files modified:**
+- src/db.py (updated)
+
+**Learnings for future iterations:**
+- sqlite3.Row allows dict-like access (row['column_name'])
+- cursor.rowcount tells us if UPDATE affected any rows
+- Use UUID4 for file_id to ensure uniqueness across runs
+- datetime.utcnow().isoformat() produces standard ISO format timestamps
+- Status flow: pending → scraped → embedded (or error at any point)
+
+### Iteration 11 - 2026-01-16T17:20:00-06:00
+Progress: 11/31

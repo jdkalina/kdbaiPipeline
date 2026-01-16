@@ -89,7 +89,7 @@
       "phase": 1,
       "title": "Implement status database operations",
       "description": "Add to src/db.py: insert_scraped_file(), get_file_by_url(), update_status(), get_files_by_status() functions.",
-      "passes": false,
+      "passes": true,
       "priority": 11
     },
     {

@@ -9,7 +9,7 @@
       "phase": 0,
       "title": "Create project directory structure",
       "description": "Create src/, data/raw/, data/processed/, config/, and tests/ directories",
-      "passes": false,
+      "passes": true,
       "priority": 1
     },
     {

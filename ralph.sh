@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Ralph Wiggum - Autonomous AI Agent Loop
-# Runs Amp CLI repeatedly until all PRD stories are complete
+# Runs Claude Code CLI repeatedly until all PRD stories are complete
 
 set -e
 
@@ -51,8 +51,8 @@ check_prerequisites() {
         exit 1
     fi
 
-    if ! command -v amp &> /dev/null; then
-        log_error "Amp CLI not found. Please install it first."
+    if ! command -v claude &> /dev/null; then
+        log_error "Claude Code CLI not found. Please install it first."
         exit 1
     fi
 
@@ -148,11 +148,11 @@ main() {
             exit 0
         fi
 
-        # Run Amp with the prompt
-        log_info "Spawning Amp instance..."
+        # Run Claude Code with the prompt
+        log_info "Spawning Claude Code instance..."
 
         local output
-        output=$(cat "$PROMPT_FILE" | amp --dangerously-allow-all 2>&1) || true
+        output=$(cat "$PROMPT_FILE" | claude --dangerously-skip-permissions 2>&1) || true
 
         # Check for completion signal
         if echo "$output" | grep -q "<promise>COMPLETE</promise>"; then

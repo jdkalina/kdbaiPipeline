@@ -292,3 +292,32 @@ Progress: 7/31
 
 ### Iteration 8 - 2026-01-16T17:05:00-06:00
 Progress: 8/31
+
+### Iteration 8 - 2026-01-16T16:45:31-06:00
+Progress: 8/31
+
+### Story: scrape-05 - Implement file saving with unique filenames
+**Completed:** 2026-01-16T17:10:00-06:00
+
+**What was implemented:**
+- Created src/scraper/storage.py with file saving functionality
+- url_to_filename(url): Generates slug-based filenames from URLs
+  - Decodes URL-encoded characters (e.g., %2B -> +)
+  - Replaces + with _plus to preserve meaning (e.g., kdb+ -> kdb_plus)
+  - Sanitizes characters to filesystem-safe equivalents
+- save_content(url, content, output_dir): Saves content to data/raw/ by default
+- file_exists(url, output_dir): Checks if file already exists for a URL
+- get_file_path(url, output_dir): Returns full Path object for a URL
+- read_content(url, output_dir): Reads content back from file
+
+**Files modified:**
+- src/scraper/storage.py (created)
+
+**Learnings for future iterations:**
+- Use urllib.parse.unquote() to decode URL-encoded characters before slugifying
+- The + symbol is special in kdb+ documentation - preserve it as "_plus"
+- pathlib.Path used consistently for all file operations
+- File storage is decoupled from database tracking (scrape-06/07 handle that)
+
+### Iteration 9 - 2026-01-16T17:10:00-06:00
+Progress: 9/31

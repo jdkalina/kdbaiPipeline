@@ -73,7 +73,7 @@
       "phase": 1,
       "title": "Implement file saving with unique filenames",
       "description": "Create src/scraper/storage.py with save_content(url, content) that generates slug-based filename and saves to data/raw/. Return filename.",
-      "passes": false,
+      "passes": true,
       "priority": 9
     },
     {

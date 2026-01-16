@@ -57,7 +57,7 @@
       "phase": 1,
       "title": "Implement content extraction from HTML",
       "description": "Create src/scraper/extractor.py with extract_body(html) function that removes navigation, TOC, headers, footers and returns clean body content.",
-      "passes": false,
+      "passes": true,
       "priority": 7
     },
     {

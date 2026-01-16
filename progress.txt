@@ -237,3 +237,30 @@ Progress: 5/31
 
 ### Iteration 6 - 2026-01-16T16:41:37-06:00
 Progress: 6/31
+
+### Iteration 6 - 2026-01-16T16:42:25-06:00
+Progress: 6/31
+
+### Story: scrape-03 - Implement content extraction from HTML
+**Completed:** 2026-01-16T17:00:00-06:00
+
+**What was implemented:**
+- Created src/scraper/extractor.py with extract_body(html) function
+- Uses BeautifulSoup to parse HTML and extract main content area
+- Configurable content selectors (main, article, div.md-content, div.content)
+- Configurable remove selectors for non-content elements (nav, header, footer, aside, sidebar, toc, scripts, styles)
+- Falls back to <body> if no main content area found
+- Returns clean HTML string with only the main content
+- Comprehensive logging of extraction progress
+
+**Files modified:**
+- src/scraper/extractor.py (created)
+
+**Learnings for future iterations:**
+- BeautifulSoup's select_one() returns None if no match, allows simple fallback chain
+- decompose() removes elements permanently from the tree
+- Config has content and remove selectors in scraper.selectors section
+- The function returns HTML (not markdown) - conversion is handled separately in scrape-04
+
+### Iteration 7 - 2026-01-16T17:00:00-06:00
+Progress: 7/31

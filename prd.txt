@@ -1,0 +1,452 @@
+# Product Requirement Document: Q for Mortals RAG Agent
+
+## Executive Summary
+
+**Project Name:** Q for Mortals RAG Agent
+
+**Purpose:** Build a retrieval-augmented generation (RAG) system that enables natural language queries against KX's Q for Mortals documentation, providing accurate, context-aware responses to q/kdb+ programming questions.
+
+**Target Users:** KX engineers, presales engineers, customers, and partners learning q/kdb+ or seeking quick reference answers.
+
+**Business Value:** Accelerates onboarding, reduces time-to-answer for technical questions, and demonstrates KX's AI capabilities using our own technology stack ([KDB.AI](http://KDB.AI)).
+
+## Project Objectives
+
+**Goal 1:** Write scripts in Python wherever possible for accessibility and maintainability.
+
+**Goal 2:** Avoid unnecessary complexity. Explainability of the code is important.
+
+**Goal 3:** Each component should be a process that can run separately from other processes (loosely coupled architecture).
+
+**Goal 4:** A simple datastore or database should help each phase signal that it should begin (event-driven orchestration).
+
+## Stakeholders
+
+- **Project Owner:** Josh Kalina
+- **Primary Users:** Myself and other members of my team of Sales Engineers
+- **Technical Dependencies:** KDBAI is hosted locally on my networks at http://192.168.1.68:8082
+
+## Source Material
+
+**Source Information:** 
+
+- Q for Mortals documentation from [code.kx.com](https://code.kx.com/q4m3/).
+- Q Documentation hosted here: https://code.kx.com/q/
+
+**Content Type:** Technical documentation, tutorials, reference material
+
+**Estimated Volume:** Multiple chapters with hierarchical structure
+
+## System Architecture Overview
+
+```
+[Phase 1: Web Scraper] → [Status DB] → [Phase 2: Embedding Pipeline] → [[KDB.AI](http://KDB.AI) Vector DB]
+                                                                              ↓
+                                                                      [Phase 3: Query API]
+                                                                              ↓
+                                                                      [Phase 4: Chat Interface]
+```
+
+## Research Requirements
+
+**Database Selection for Status Tracking:**
+
+- SQLite (lightweight, Python-native, sufficient for status/orchestration)
+
+**Embedding Model Selection:**
+
+- FastEmbed (current plan) - validate model choice (e.g., BAAI/bge-small-en-v1.5)
+- sentencetranformers is another option.
+- Consider: domain adaptation for technical documentation
+
+**Chunking Strategy:**
+
+- Current plan: parse on headings within chapters
+- Research needed: optimal chunk size, overlap strategy, metadata preservation
+
+---
+
+# Phase 1: Web Scraping & Content Extraction
+
+## Objective
+
+Scrape Q for Mortals documentation from [code.kx.com](http://code.kx.com), extract clean body content (excluding navigation/headers), and persist to disk with status tracking.
+
+## Input
+
+- **Parent URL:** Root URL for Q for Mortals documentation
+- **Configuration:** List of child URLs or auto-discovery rules
+
+## Processing Logic
+
+1. Parse parent URL to discover all chapter/section URLs
+2. For each URL:
+    - Fetch HTML content
+    - Extract body content only (exclude TOC, headers, footers, navigation)
+    - Clean HTML → convert to structured format (Markdown or plain text)
+    - Generate unique filename (e.g., `chapter_{id}_{slug}.md`)
+    - Save to disk in designated directory
+3. Record metadata in status database:
+    - URL
+    - Filename
+    - Download timestamp
+    - Content hash (for change detection)
+    - Status: `scraped`
+
+## Output
+
+- **Files on Disk:** One file per chapter/section in `/data/raw/` directory
+- **Database Records:** One record per file in status DB with columns:
+    - `file_id` (UUID)
+    - `url` (TEXT)
+    - `filename` (TEXT)
+    - `scraped_at` (TIMESTAMP)
+    - `content_hash` (TEXT)
+    - `status` (TEXT: scraped, embedded, failed)
+    - `error_message` (TEXT, nullable)
+
+## Success Criteria
+
+- All chapter URLs successfully downloaded (100% coverage)
+- Body content correctly extracted (no navigation/TOC pollution)
+- All files persisted to disk with valid content
+- Status database updated with complete metadata
+- Script handles failures gracefully (retry logic, error logging)
+
+## Non-Functional Requirements
+
+- **Idempotency:** Re-running should detect already-scraped content (via hash comparison)
+- **Rate Limiting:** Respect robots.txt and implement polite scraping (delays between requests)
+- **Error Handling:** Log errors, continue on individual failures, report summary at end
+
+## Technical Considerations
+
+- **Libraries:** requests/httpx for HTTP, BeautifulSoup4/lxml for parsing, markdownify for conversion
+- **Configuration:** Store URLs, selectors, and delays in a config file (YAML/JSON)
+- **Logging:** Structured logging with levels (INFO, WARNING, ERROR)
+
+---
+
+# Phase 2: Embedding Pipeline & Vector Storage
+
+## Objective
+
+Monitor status database for newly scraped files, process them into chunks with metadata, generate embeddings, and insert into [KDB.AI](http://KDB.AI) vector database.
+
+## Input
+
+- **Trigger:** New records in status DB with `status = 'scraped'`
+- **Files:** Raw content files from Phase 1 in `/data/raw/`
+
+## Processing Logic
+
+1. **Poll Status Database:** Query for records where `status = 'scraped'` (polling interval: configurable, e.g., every 30 seconds)
+2. **For Each File:**
+    - Read content from disk
+    - **Parse & Chunk:**
+        - Split on headings (H1, H2, H3) to preserve semantic boundaries
+        - Each chunk includes:
+            - Text content
+            - Metadata: chapter title, heading hierarchy, source URL, file_id
+    - **Generate Embeddings:**
+        - Use FastEmbed to create vector embeddings for each chunk
+        - Model: [specify model, e.g., BAAI/bge-small-en-v1.5]
+    - **Insert into [KDB.AI](http://KDB.AI):**
+        - Schema: `chunk_id`, `text`, `embedding`, `metadata` (JSON with chapter, heading, url, file_id)
+        - Batch inserts for efficiency (e.g., 100 chunks at a time)
+3. **Update Status Database:** Set `status = 'embedded'` and timestamp
+
+## Output
+
+- [**KDB.AI](http://KDB.AI) Vector Database:** Populated with embeddings and metadata
+- **Updated Status DB:** Records marked as `embedded`
+
+## Success Criteria
+
+- All scraped files successfully processed (no files left in `scraped` status)
+- Embeddings generated for all chunks
+- All chunks inserted into [KDB.AI](http://KDB.AI) with correct metadata
+- Status database reflects completion
+
+## Non-Functional Requirements
+
+- **Scalability:** Handle large batch of files efficiently (parallel processing if needed)
+- **Data Quality:** Validate chunks are semantically coherent (no mid-sentence splits)
+- **Monitoring:** Log progress (e.g., "Processed 50/200 files")
+- **Recovery:** If process crashes, resume from last completed file (not re-process embedded files)
+
+## Technical Considerations
+
+- **Libraries:** fastembed for embeddings, kdbai Python client for DB operations
+- **Chunking:** Explore langchain or llama-index chunking utilities for heading-aware splits
+- **Configuration:** Chunk size limits (e.g., max 512 tokens), overlap settings
+- [**KDB.AI](http://KDB.AI) Setup:** Ensure [KDB.AI](http://KDB.AI) instance running, connection string in env vars
+- **Error Handling:** If embedding fails for a chunk, log and continue; mark file as `failed` after max retries
+
+## Research & Design Decisions Needed
+
+- [ ]  Optimal chunk size (balance between context and precision)
+- [ ]  Overlap strategy (e.g., 10% overlap vs. none)
+- [ ]  Metadata schema in [KDB.AI](http://KDB.AI) (what fields are queryable/filterable?)
+- [ ]  Batch size for inserts (trade-off between speed and memory)
+
+---
+
+# Phase 3: Query & Retrieval API
+
+## Objective
+
+Provide a REST API that accepts natural language queries, retrieves relevant chunks from [KDB.AI](http://KDB.AI), and returns context for answer generation.
+
+## Input
+
+- **User Query:** Natural language question (e.g., "How do I create a table in q?")
+- **Optional Parameters:** Top-k results (default 5), metadata filters (e.g., specific chapter)
+
+## Processing Logic
+
+1. **Receive Query:** POST /query endpoint with JSON body
+2. **Generate Query Embedding:** Use same FastEmbed model to embed user query
+3. **Vector Search in [KDB.AI](http://KDB.AI):**
+    - Hybrid search: semantic (vector similarity) + optional metadata filters
+    - Retrieve top-k most similar chunks
+4. **Return Results:**
+    - Ranked list of chunks with:
+        - Text content
+        - Metadata (chapter, heading, URL)
+        - Similarity score
+
+## Output
+
+- **API Response (JSON):**
+
+```json
+{
+  "query": "How do I create a table in q?",
+  "results": [
+    {
+      "text": "...",
+      "metadata": {"chapter": "...", "heading": "...", "url": "..."},
+      "score": 0.89
+    }
+  ]
+}
+```
+
+## Success Criteria
+
+- API returns relevant results for test queries (qualitative evaluation)
+- Response time < 1 second for typical queries
+- Correct handling of edge cases (empty query, no results found)
+
+## Non-Functional Requirements
+
+- **Performance:** Fast retrieval (< 500ms for vector search)
+- **Scalability:** Handle concurrent queries
+- **Observability:** Log queries and latency for monitoring
+
+## Technical Considerations
+
+- **Framework:** FastAPI or Flask for REST API
+- [**KDB.AI](http://KDB.AI) Client:** Use [KDB.AI](http://KDB.AI) Python SDK for queries
+- **Deployment:** Containerize with Docker for portability
+
+---
+
+# Phase 4: Chat Interface (Optional / Future)
+
+## Objective
+
+Provide a user-friendly chat interface that combines retrieval (Phase 3) with LLM-based answer generation.
+
+## Input
+
+- **User Question:** Natural language query
+
+## Processing Logic
+
+1. **Retrieve Context:** Call Phase 3 API to get relevant chunks
+2. **LLM Generation:**
+    - Construct prompt with retrieved context + user question
+    - Call LLM (e.g., GPT-4, local model via ollama/vLLM)
+    - Generate answer with citations to source chunks
+3. **Display Response:** Show answer + source references (chapter, URL)
+
+## Output
+
+- **Chat UI:** Web interface (e.g., Gradio, Streamlit) or CLI
+
+## Success Criteria
+
+- Answers are accurate and grounded in retrieved context
+- Citations link back to source documentation
+- User experience is intuitive
+
+## Technical Considerations
+
+- **UI Framework:** Gradio (quick prototyping) or custom React app
+- **LLM Selection:** Weigh cost (API) vs. control (local model)
+- **Prompt Engineering:** Design prompt template for consistent quality
+
+---
+
+# System-Wide Requirements
+
+## Performance
+
+- **Scraping (Phase 1):** Complete full scrape in < 10 minutes
+- **Embedding (Phase 2):** Process 100 pages in < 5 minutes
+- **Query (Phase 3):** Response time < 1 second (p95)
+
+## Reliability
+
+- **Uptime:** 99%+ for query API (Phase 3)
+- **Data Integrity:** No data loss between phases
+- **Error Recovery:** Automatic retry with exponential backoff for transient failures
+
+## Security
+
+- **API Authentication:** Implement API key or OAuth for query endpoint (if exposed externally)
+- **Data Privacy:** No PII in logs
+- [**KDB.AI](http://KDB.AI) Access:** Secure credentials (env vars, not hardcoded)
+
+## Maintainability
+
+- **Code Quality:** Python type hints, docstrings, linting (black, ruff)
+- **Testing:** Unit tests for core logic, integration tests for DB operations
+- **Documentation:** README with setup instructions, architecture diagram, API docs
+
+## Observability
+
+- **Logging:** Structured logs (JSON format) at each phase
+- **Metrics:** Track scrape count, embedding count, query latency, error rate
+- **Monitoring:** (Future) Integrate with Prometheus/Grafana or simple log aggregation
+
+---
+
+# Technology Stack
+
+## Core Components
+
+- **Language:** Python 3.11+
+- **Web Scraping:** BeautifulSoup4, requests
+- **Embeddings:** FastEmbed (model: TBD)
+- **Vector Database:** [KDB.AI](http://KDB.AI) Server Edition
+- **Status Database:** [TBD: SQLite vs. kdb+]
+- **API Framework:** FastAPI
+- **Orchestration:** Simple polling (Phase 2) or event-driven (e.g., file watcher, message queue - future)
+
+## Development & Deployment
+
+- **Containerization:** Docker, docker-compose for multi-service setup
+- **Version Control:** Git
+- **Environment Management:** venv or conda, requirements.txt or pyproject.toml
+
+---
+
+# Success Metrics
+
+## Quantitative
+
+- **Coverage:** 100% of Q for Mortals chapters scraped and embedded
+- **Accuracy:** Top-5 retrieval contains correct answer for 90%+ of test queries
+- **Latency:** p95 query response < 1 second
+- **Uptime:** 99%+ availability for query API
+
+## Qualitative
+
+- **User Feedback:** Positive feedback from 3+ KX team members after testing
+- **Code Quality:** Passes linting, has >80% test coverage for critical paths
+- **Explainability:** New contributor can understand and modify code within 1 day
+
+---
+
+# Timeline & Milestones
+
+**Phase 1 (Scraping):** 1 week
+
+- [ ]  Research and select web scraping approach
+- [ ]  Implement scraper with error handling
+- [ ]  Set up status database schema
+- [ ]  Test on subset of URLs
+- [ ]  Full scrape and validation
+
+**Phase 2 (Embedding):** 1-2 weeks
+
+- [ ]  Design chunking strategy (research + prototype)
+- [ ]  Implement embedding pipeline
+- [ ]  Set up [KDB.AI](http://KDB.AI) instance and schema
+- [ ]  Process all scraped files
+- [ ]  Validate data quality in vector DB
+
+**Phase 3 (Query API):** 1 week
+
+- [ ]  Implement FastAPI query endpoint
+- [ ]  Test retrieval quality with sample queries
+- [ ]  Optimize performance (indexing, caching)
+- [ ]  Document API
+
+**Phase 4 (Chat Interface):** 1 week (optional)
+
+- [ ]  Select UI framework
+- [ ]  Integrate with Phase 3 API
+- [ ]  Implement LLM generation
+- [ ]  User testing and refinement
+
+**Total Estimated Time:** 4-5 weeks
+
+---
+
+# Dependencies
+
+## External
+
+- [**KDB.AI](http://KDB.AI) Server Edition:** Must be running and accessible
+- **Q for Mortals Website:** Must be accessible (no downtime during scraping)
+- **FastEmbed Models:** Download and cache embedding models
+
+## Internal
+
+- **Python Environment:** 3.11+ with required packages
+- **Disk Space:** Estimate 100MB-1GB for raw files + embeddings
+- [**KDB.AI](http://KDB.AI) License:** Valid license for Server Edition
+
+---
+
+# Risks & Mitigation
+
+| Risk | Impact | Probability | Mitigation |
+| --- | --- | --- | --- |
+| Website structure changes break scraper | High | Medium | Use robust selectors, implement validation, version control scraper config |
+| Poor retrieval quality (irrelevant results) | High | Medium | Iterate on chunking strategy, evaluate multiple embedding models, add metadata filters |
+| [KDB.AI](http://KDB.AI) performance issues at scale | Medium | Low | Benchmark early, optimize indexing, consider sharding if needed |
+| Scraping blocked by rate limiting/IP ban | Low | Low | Implement polite scraping, use delays, respect robots.txt |
+| Embedding model license or availability | Low | Low | Use open-source models (e.g., BAAI/bge), cache locally |
+
+---
+
+# Open Questions & Decisions Needed
+
+- [ ]  **Status database:** SQLite (simple) vs. kdb+ (dogfooding)?
+- [ ]  **Embedding model:** Which FastEmbed model performs best for technical docs?
+- [ ]  **Chunk size:** What's the optimal token limit per chunk?
+- [ ]  **Overlap:** Should chunks overlap? If so, by how much?
+- [ ]  **Metadata schema:** What fields should be indexed/filterable in [KDB.AI](http://KDB.AI)?
+- [ ]  **LLM selection (Phase 4):** API-based (GPT-4) or local (ollama)?
+- [ ]  **Deployment target:** Local dev only, or deploy to shared environment?
+- [ ]  **Update strategy:** How to handle documentation updates (re-scrape, incremental)?
+
+---
+
+# Appendix: Sample Queries for Testing
+
+1. How do I create a table in q?
+2. What is the difference between `each` and `peach`?
+3. How do I join two tables?
+4. Explain q-SQL syntax
+5. How do I read a CSV file in kdb+?
+6. What are functional selects?
+7. How do I define a function in q?
+8. What is a keyed table?
+9. How do I handle nulls in q?
+10. What are attributes in kdb+ and when should I use them?

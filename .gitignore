@@ -1,0 +1,9 @@
+kdbai-samples/
+venv/
+__pycache__/
+*.pyc
+.ralph-archive/
+.ralph-last-branch
+data/raw/
+data/processed/
+*.db

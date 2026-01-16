@@ -1,0 +1,25 @@
+# Progress Log - Q for Mortals RAG Agent
+# Started: 2026-01-16
+# Project: RAG system for Q for Mortals documentation using KDB.AI
+
+## Codebase Patterns
+<!-- Consolidate reusable patterns here as they're discovered -->
+
+### KDB.AI
+- Endpoint: http://192.168.1.68:8082
+- Use `session.database("default")` to get the default database
+- Schema uses `float32s` type for embedding vectors
+- Use cosine similarity (`metric: "CS"`) for text embeddings
+- BAAI/bge-small-en-v1.5 produces 384-dimensional vectors
+
+### Project Conventions
+- All source code in `src/` directory
+- Configuration in `config/config.yaml`
+- Raw scraped content in `data/raw/`
+- Use SQLite for status tracking (lightweight, Python-native)
+- Logging via Python `logging` module, not print statements
+
+---
+
+## Iteration History
+

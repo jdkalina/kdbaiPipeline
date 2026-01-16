@@ -1,0 +1,256 @@
+{
+  "projectName": "Q for Mortals RAG Agent",
+  "description": "RAG system for natural language queries against Q for Mortals documentation using KDB.AI",
+  "branch": "main",
+  "kdbaiEndpoint": "http://192.168.1.68:8082",
+  "userStories": [
+    {
+      "id": "setup-01",
+      "phase": 0,
+      "title": "Create project directory structure",
+      "description": "Create src/, data/raw/, data/processed/, config/, and tests/ directories",
+      "passes": false,
+      "priority": 1
+    },
+    {
+      "id": "setup-02",
+      "phase": 0,
+      "title": "Create config.yaml with project settings",
+      "description": "Create config/config.yaml with scraper settings (base_url, delay, selectors), embedding settings (model name, chunk size), and KDB.AI connection settings",
+      "passes": false,
+      "priority": 2
+    },
+    {
+      "id": "setup-03",
+      "phase": 0,
+      "title": "Create SQLite database schema",
+      "description": "Create src/db.py with SQLite schema for status tracking: file_id, url, filename, scraped_at, content_hash, status, error_message. Include init_db() function.",
+      "passes": false,
+      "priority": 3
+    },
+    {
+      "id": "setup-04",
+      "phase": 0,
+      "title": "Create requirements.txt with dependencies",
+      "description": "Create requirements.txt with: requests, beautifulsoup4, markdownify, fastembed, kdbai-client, fastapi, uvicorn, pyyaml, gradio",
+      "passes": false,
+      "priority": 4
+    },
+    {
+      "id": "scrape-01",
+      "phase": 1,
+      "title": "Implement URL discovery for Q4M chapters",
+      "description": "Create src/scraper/discover.py that fetches https://code.kx.com/q4m3/ and extracts all chapter URLs. Return list of URLs.",
+      "passes": false,
+      "priority": 5
+    },
+    {
+      "id": "scrape-02",
+      "phase": 1,
+      "title": "Implement HTML fetcher with rate limiting",
+      "description": "Create src/scraper/fetcher.py with fetch_page(url) function that includes configurable delay between requests and proper error handling.",
+      "passes": false,
+      "priority": 6
+    },
+    {
+      "id": "scrape-03",
+      "phase": 1,
+      "title": "Implement content extraction from HTML",
+      "description": "Create src/scraper/extractor.py with extract_body(html) function that removes navigation, TOC, headers, footers and returns clean body content.",
+      "passes": false,
+      "priority": 7
+    },
+    {
+      "id": "scrape-04",
+      "phase": 1,
+      "title": "Implement HTML to Markdown conversion",
+      "description": "Add convert_to_markdown(html) function to extractor.py that converts clean HTML to well-formatted Markdown preserving code blocks and headings.",
+      "passes": false,
+      "priority": 8
+    },
+    {
+      "id": "scrape-05",
+      "phase": 1,
+      "title": "Implement file saving with unique filenames",
+      "description": "Create src/scraper/storage.py with save_content(url, content) that generates slug-based filename and saves to data/raw/. Return filename.",
+      "passes": false,
+      "priority": 9
+    },
+    {
+      "id": "scrape-06",
+      "phase": 1,
+      "title": "Implement content hash for change detection",
+      "description": "Add compute_hash(content) to storage.py using SHA256. Used for idempotency - skip re-scraping unchanged content.",
+      "passes": false,
+      "priority": 10
+    },
+    {
+      "id": "scrape-07",
+      "phase": 1,
+      "title": "Implement status database operations",
+      "description": "Add to src/db.py: insert_scraped_file(), get_file_by_url(), update_status(), get_files_by_status() functions.",
+      "passes": false,
+      "priority": 11
+    },
+    {
+      "id": "scrape-08",
+      "phase": 1,
+      "title": "Create main scraper orchestrator",
+      "description": "Create src/scraper/main.py that orchestrates the full scrape: discover URLs, fetch each, extract, convert, save, update DB. Include progress logging.",
+      "passes": false,
+      "priority": 12
+    },
+    {
+      "id": "scrape-09",
+      "phase": 1,
+      "title": "Add idempotency check to scraper",
+      "description": "Update scraper main.py to check content hash before re-scraping. Skip files that haven't changed.",
+      "passes": false,
+      "priority": 13
+    },
+    {
+      "id": "embed-01",
+      "phase": 2,
+      "title": "Implement heading-aware text chunker",
+      "description": "Create src/embedding/chunker.py with chunk_by_headings(markdown) that splits on H1/H2/H3 headings. Return list of chunks with heading hierarchy metadata.",
+      "passes": false,
+      "priority": 14
+    },
+    {
+      "id": "embed-02",
+      "phase": 2,
+      "title": "Add chunk size limits with overlap",
+      "description": "Update chunker.py to enforce max token limit per chunk (configurable, default 512). Split large sections with configurable overlap.",
+      "passes": false,
+      "priority": 15
+    },
+    {
+      "id": "embed-03",
+      "phase": 2,
+      "title": "Implement FastEmbed wrapper",
+      "description": "Create src/embedding/embedder.py with generate_embeddings(texts) using FastEmbed BAAI/bge-small-en-v1.5 model. Return list of vectors.",
+      "passes": false,
+      "priority": 16
+    },
+    {
+      "id": "embed-04",
+      "phase": 2,
+      "title": "Create KDB.AI client wrapper",
+      "description": "Create src/kdbai/client.py with connect(), create_table(), insert_batch(), search() functions. Use kdbai-client library.",
+      "passes": false,
+      "priority": 17
+    },
+    {
+      "id": "embed-05",
+      "phase": 2,
+      "title": "Define KDB.AI table schema",
+      "description": "Add create_embeddings_table() to client.py with schema: chunk_id (str), text (str), embedding (vector), chapter (str), heading (str), url (str), file_id (str).",
+      "passes": false,
+      "priority": 18
+    },
+    {
+      "id": "embed-06",
+      "phase": 2,
+      "title": "Implement batch insert to KDB.AI",
+      "description": "Add insert_chunks(chunks_with_embeddings) to client.py that batches inserts (100 at a time) for efficiency.",
+      "passes": false,
+      "priority": 19
+    },
+    {
+      "id": "embed-07",
+      "phase": 2,
+      "title": "Create embedding pipeline orchestrator",
+      "description": "Create src/embedding/main.py that: polls DB for status='scraped', reads file, chunks, embeds, inserts to KDB.AI, updates status to 'embedded'.",
+      "passes": false,
+      "priority": 20
+    },
+    {
+      "id": "embed-08",
+      "phase": 2,
+      "title": "Add progress logging to embedding pipeline",
+      "description": "Update embedding main.py with structured logging: files processed, chunks created, embeddings generated, insert progress.",
+      "passes": false,
+      "priority": 21
+    },
+    {
+      "id": "query-01",
+      "phase": 3,
+      "title": "Create FastAPI app skeleton",
+      "description": "Create src/api/main.py with FastAPI app, health check endpoint at GET /health, and CORS middleware.",
+      "passes": false,
+      "priority": 22
+    },
+    {
+      "id": "query-02",
+      "phase": 3,
+      "title": "Implement query embedding generation",
+      "description": "Create src/api/query.py with embed_query(text) that uses same FastEmbed model to embed user queries.",
+      "passes": false,
+      "priority": 23
+    },
+    {
+      "id": "query-03",
+      "phase": 3,
+      "title": "Implement vector search endpoint",
+      "description": "Add POST /query endpoint that accepts {query: str, top_k: int=5}, embeds query, searches KDB.AI, returns ranked results with metadata.",
+      "passes": false,
+      "priority": 24
+    },
+    {
+      "id": "query-04",
+      "phase": 3,
+      "title": "Add metadata filtering to search",
+      "description": "Update /query endpoint to accept optional chapter filter. Pass to KDB.AI search as metadata filter.",
+      "passes": false,
+      "priority": 25
+    },
+    {
+      "id": "query-05",
+      "phase": 3,
+      "title": "Add request validation and error handling",
+      "description": "Add Pydantic models for request/response validation. Handle empty queries, KDB.AI connection errors gracefully.",
+      "passes": false,
+      "priority": 26
+    },
+    {
+      "id": "query-06",
+      "phase": 3,
+      "title": "Add query logging and latency tracking",
+      "description": "Add structured logging for each query: timestamp, query text, latency_ms, num_results. Log to stdout in JSON format.",
+      "passes": false,
+      "priority": 27
+    },
+    {
+      "id": "chat-01",
+      "phase": 4,
+      "title": "Create Gradio chat interface skeleton",
+      "description": "Create src/chat/main.py with basic Gradio Chatbot interface. Text input, submit button, chat history display.",
+      "passes": false,
+      "priority": 28
+    },
+    {
+      "id": "chat-02",
+      "phase": 4,
+      "title": "Integrate retrieval API with chat",
+      "description": "Update chat main.py to call /query endpoint on user input. Display retrieved chunks below the chat.",
+      "passes": false,
+      "priority": 29
+    },
+    {
+      "id": "chat-03",
+      "phase": 4,
+      "title": "Add LLM integration for answer generation",
+      "description": "Add generate_answer(query, context) that constructs prompt with retrieved chunks and calls LLM API (configurable: OpenAI or local ollama).",
+      "passes": false,
+      "priority": 30
+    },
+    {
+      "id": "chat-04",
+      "phase": 4,
+      "title": "Add source citations to chat responses",
+      "description": "Update chat to display source citations (chapter, URL) below each AI response. Make URLs clickable.",
+      "passes": false,
+      "priority": 31
+    }
+  ]
+}

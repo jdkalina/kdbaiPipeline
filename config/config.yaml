@@ -1,0 +1,134 @@
+# Q for Mortals RAG Agent Configuration
+# This file contains settings for all components of the RAG system
+
+# =============================================================================
+# Scraper Settings
+# =============================================================================
+scraper:
+  # Base URL for Q for Mortals documentation
+  base_url: "https://code.kx.com/q4m3/"
+
+  # Delay between requests in seconds (be polite to the server)
+  delay: 1.0
+
+  # Request timeout in seconds
+  timeout: 30
+
+  # CSS selectors for content extraction
+  selectors:
+    # Main content area (tried in order, first match wins)
+    content:
+      - "main"
+      - "article"
+      - "div.md-content"
+      - "div.content"
+    # Elements to remove from content
+    remove:
+      - "nav"
+      - "header"
+      - "footer"
+      - "aside"
+      - "div.md-sidebar"
+      - "div.toc"
+      - "div.admonition.todo"
+
+# =============================================================================
+# Embedding Settings
+# =============================================================================
+embedding:
+  # FastEmbed model name (384 dimensions)
+  model_name: "BAAI/bge-small-en-v1.5"
+
+  # Vector dimensions (must match model output)
+  dimensions: 384
+
+  # Maximum tokens per chunk
+  chunk_size: 512
+
+  # Overlap between chunks (in tokens)
+  chunk_overlap: 50
+
+  # Batch size for embedding generation
+  batch_size: 32
+
+# =============================================================================
+# KDB.AI Connection Settings
+# =============================================================================
+kdbai:
+  # KDB.AI endpoint (can be overridden by KDBAI_ENDPOINT env var)
+  endpoint: "http://192.168.1.68:8082"
+
+  # Database name
+  database: "default"
+
+  # Table name for storing embeddings
+  table_name: "q4m_chunks"
+
+  # Index configuration
+  index:
+    name: "flat_index"
+    type: "flat"
+    metric: "CS"  # Cosine Similarity
+
+  # Batch size for inserts
+  insert_batch_size: 100
+
+# =============================================================================
+# API Settings
+# =============================================================================
+api:
+  # Host to bind to
+  host: "0.0.0.0"
+
+  # Port to listen on
+  port: 8000
+
+  # Default number of results to return
+  default_top_k: 5
+
+  # Maximum number of results allowed
+  max_top_k: 20
+
+# =============================================================================
+# Chat Interface Settings
+# =============================================================================
+chat:
+  # Gradio server settings
+  host: "0.0.0.0"
+  port: 7860
+
+  # LLM settings for answer generation
+  llm:
+    # Provider: "openai" or "ollama"
+    provider: "ollama"
+
+    # Model name (depends on provider)
+    model: "llama3.2"
+
+    # Ollama endpoint (if using ollama)
+    ollama_endpoint: "http://localhost:11434"
+
+    # OpenAI settings (if using openai)
+    # openai_api_key is read from OPENAI_API_KEY env var
+    openai_model: "gpt-4o-mini"
+
+    # Generation parameters
+    temperature: 0.7
+    max_tokens: 1024
+
+# =============================================================================
+# Database Settings (SQLite for status tracking)
+# =============================================================================
+database:
+  # Path to SQLite database file
+  path: "data/status.db"
+
+# =============================================================================
+# Logging Settings
+# =============================================================================
+logging:
+  # Log level: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  level: "INFO"
+
+  # Log format
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"

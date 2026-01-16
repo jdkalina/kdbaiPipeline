@@ -101,3 +101,28 @@ Progress: 0/31
 **Learnings for future iterations:**
 - Directory structure was created in an earlier iteration
 - The structure follows the pattern specified in prompt.md
+
+### Iteration 1 - 2026-01-16T16:33:15-06:00
+Progress: 1/31
+
+### Story: setup-02 - Create config.yaml with project settings
+**Completed:** 2026-01-16T16:40:00-06:00
+
+**What was implemented:**
+- Created config/config.yaml with comprehensive project settings
+- Scraper settings: base_url, delay, timeout, CSS selectors for content extraction
+- Embedding settings: model_name (BAAI/bge-small-en-v1.5), dimensions (384), chunk_size (512), overlap
+- KDB.AI settings: endpoint, database, table_name, index configuration, batch sizes
+- API settings: host, port, default/max top_k
+- Chat settings: Gradio server config, LLM provider options (ollama/openai)
+- Database settings: SQLite path
+- Logging settings: level, format
+
+**Files modified:**
+- config/config.yaml (created)
+
+**Learnings for future iterations:**
+- YAML validated successfully with PyYAML
+- Config structure supports both ollama and openai LLM providers
+- All settings have sensible defaults that can be overridden by environment variables where appropriate
+

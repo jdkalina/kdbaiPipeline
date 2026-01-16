@@ -17,7 +17,7 @@
       "phase": 0,
       "title": "Create config.yaml with project settings",
       "description": "Create config/config.yaml with scraper settings (base_url, delay, selectors), embedding settings (model name, chunk size), and KDB.AI connection settings",
-      "passes": false,
+      "passes": true,
       "priority": 2
     },
     {

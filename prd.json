@@ -41,7 +41,7 @@
       "phase": 1,
       "title": "Implement URL discovery for Q4M chapters",
       "description": "Create src/scraper/discover.py that fetches https://code.kx.com/q4m3/ and extracts all chapter URLs. Return list of URLs.",
-      "passes": false,
+      "passes": true,
       "priority": 5
     },
     {

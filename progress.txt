@@ -181,3 +181,31 @@ Progress: 3/31
 
 ### Iteration 4 - 2026-01-16T16:50:00-06:00
 Progress: 4/31
+
+### Iteration 4 - 2026-01-16T16:37:45-06:00
+Progress: 4/31
+
+### Story: scrape-01 - Implement URL discovery for Q4M chapters
+**Completed:** 2026-01-16T16:39:48-06:00
+
+**What was implemented:**
+- Created src/scraper/discover.py with discover_chapter_urls() function
+- Fetches the Q4M3 index page and extracts all chapter URLs
+- Uses a known list of chapter patterns for reliable discovery
+- Filters out anchor links (section links within pages)
+- Returns list of 19 absolute URLs for main chapter pages
+- Includes fallback to known chapter list if dynamic discovery fails
+- Uses Python logging module for status messages
+
+**Files modified:**
+- src/scraper/discover.py (created)
+
+**Learnings for future iterations:**
+- Q4M3 has 19 chapters: preface, 0-14 numbered chapters, A & B appendices, and colophon
+- Chapter URLs follow pattern: base_url + "X_Chapter_Name/"
+- The site uses relative links that need urljoin() to make absolute
+- Chapter 14 uses URL encoding for "+" (%2B in some links)
+- Skip anchor links (containing #) when discovering main chapter pages
+
+### Iteration 5 - 2026-01-16T16:39:48-06:00
+Progress: 5/31

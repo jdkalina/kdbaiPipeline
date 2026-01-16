@@ -152,3 +152,32 @@ Progress: 2/31
 
 ### Iteration 3 - 2026-01-16T16:45:00-06:00
 Progress: 3/31
+
+### Iteration 3 - 2026-01-16T16:36:19-06:00
+Progress: 3/31
+
+### Story: setup-04 - Create requirements.txt with dependencies
+**Completed:** 2026-01-16T16:50:00-06:00
+
+**What was implemented:**
+- Created requirements.txt with all required project dependencies
+- Web scraping: requests, beautifulsoup4, markdownify
+- Embeddings: fastembed
+- KDB.AI: kdbai-client
+- API server: fastapi, uvicorn
+- Configuration: pyyaml
+- Chat interface: gradio
+- LLM providers: openai, httpx (for ollama async HTTP)
+- Development/testing: pytest, mypy
+
+**Files modified:**
+- requirements.txt (created)
+
+**Learnings for future iterations:**
+- pip --dry-run validates the requirements file successfully
+- sqlite3 is part of Python standard library, no need to include
+- httpx added for async HTTP support needed by ollama client
+- Version constraints use >= to allow flexibility while ensuring minimum compatible versions
+
+### Iteration 4 - 2026-01-16T16:50:00-06:00
+Progress: 4/31

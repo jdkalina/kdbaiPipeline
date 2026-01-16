@@ -1,0 +1,33 @@
+# Q for Mortals RAG Agent - Dependencies
+
+# Web scraping
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+markdownify>=0.11.0
+
+# Embeddings
+fastembed>=0.2.0
+
+# KDB.AI client
+kdbai-client>=1.0.0
+
+# API server
+fastapi>=0.109.0
+uvicorn>=0.27.0
+
+# Configuration
+pyyaml>=6.0
+
+# Chat interface
+gradio>=4.0.0
+
+# Database (sqlite3 is built-in, but we need typing support)
+# sqlite3 is part of Python standard library
+
+# Optional: LLM providers for chat
+openai>=1.0.0
+httpx>=0.26.0  # For async HTTP (ollama client)
+
+# Development/Testing
+pytest>=7.4.0
+mypy>=1.8.0

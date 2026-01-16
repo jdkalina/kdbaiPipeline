@@ -33,7 +33,7 @@
       "phase": 0,
       "title": "Create requirements.txt with dependencies",
       "description": "Create requirements.txt with: requests, beautifulsoup4, markdownify, fastembed, kdbai-client, fastapi, uvicorn, pyyaml, gradio",
-      "passes": false,
+      "passes": true,
       "priority": 4
     },
     {

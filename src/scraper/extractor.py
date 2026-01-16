@@ -8,6 +8,7 @@ import logging
 from typing import List, Optional
 
 from bs4 import BeautifulSoup
+import markdownify
 
 logger = logging.getLogger(__name__)
 
@@ -96,8 +97,97 @@ def extract_body(
     return cleaned_html
 
 
+def convert_to_markdown(
+    html: str,
+    code_language: str = "q",
+    heading_style: str = "ATX",
+) -> str:
+    """Convert HTML to well-formatted Markdown.
+
+    Converts clean HTML content to Markdown format, preserving code blocks,
+    headings, lists, and other structural elements.
+
+    Args:
+        html: The HTML content to convert.
+        code_language: Default language to use for code blocks (default: "q"
+            for Q/kdb+ code).
+        heading_style: Style for headings - "ATX" uses # symbols, "SETEXT"
+            uses underlines (default: "ATX").
+
+    Returns:
+        Markdown-formatted string.
+    """
+    if not html or not html.strip():
+        logger.warning("Empty HTML provided for markdown conversion")
+        return ""
+
+    # Configure markdownify options
+    # - heading_style: ATX uses # symbols
+    # - code_language: default language for code blocks
+    # - strip: remove these tags entirely
+    # - bullets: bullet character for unordered lists
+    markdown = markdownify.markdownify(
+        html,
+        heading_style=heading_style,
+        code_language=code_language,
+        bullets="-",
+        strip=["script", "style", "noscript"],
+    )
+
+    # Clean up the markdown
+    # Remove excessive blank lines (more than 2 consecutive)
+    lines = markdown.split("\n")
+    cleaned_lines = []
+    blank_count = 0
+
+    for line in lines:
+        if line.strip() == "":
+            blank_count += 1
+            if blank_count <= 2:
+                cleaned_lines.append(line)
+        else:
+            blank_count = 0
+            cleaned_lines.append(line)
+
+    markdown = "\n".join(cleaned_lines)
+
+    # Strip leading/trailing whitespace
+    markdown = markdown.strip()
+
+    logger.info(
+        f"Converted HTML to Markdown: {len(html)} chars -> {len(markdown)} chars"
+    )
+
+    return markdown
+
+
+def extract_and_convert(
+    html: str,
+    content_selectors: Optional[List[str]] = None,
+    remove_selectors: Optional[List[str]] = None,
+    code_language: str = "q",
+) -> str:
+    """Extract content from HTML and convert to Markdown in one step.
+
+    Convenience function that combines extract_body() and convert_to_markdown().
+
+    Args:
+        html: The raw HTML content.
+        content_selectors: CSS selectors to try for finding main content.
+        remove_selectors: CSS selectors for elements to remove from content.
+        code_language: Default language for code blocks.
+
+    Returns:
+        Markdown-formatted string of the main content.
+    """
+    clean_html = extract_body(html, content_selectors, remove_selectors)
+    if not clean_html:
+        return ""
+    return convert_to_markdown(clean_html, code_language=code_language)
+
+
 if __name__ == "__main__":
-    # Test the extractor with sample HTML
+    # Test the extractor and markdown conversion
     logging.basicConfig(level=logging.DEBUG)
 
     sample_html = """
@@ -112,7 +202,16 @@ if __name__ == "__main__":
                 <h1>Main Content</h1>
                 <p>This is the main content.</p>
                 <div class="toc">Table of Contents</div>
-                <p>More content here.</p>
+                <h2>Code Example</h2>
+                <pre><code>q) 2+2
+4
+q) til 10
+0 1 2 3 4 5 6 7 8 9</code></pre>
+                <p>More content here with <strong>bold</strong> and <em>italic</em> text.</p>
+                <ul>
+                    <li>First item</li>
+                    <li>Second item</li>
+                </ul>
             </article>
         </main>
         <footer>Footer</footer>
@@ -120,6 +219,20 @@ if __name__ == "__main__":
     </html>
     """
 
-    result = extract_body(sample_html)
-    print("Extracted content:")
-    print(result)
+    print("=" * 60)
+    print("Testing extract_body():")
+    print("=" * 60)
+    extracted = extract_body(sample_html)
+    print(extracted)
+
+    print("\n" + "=" * 60)
+    print("Testing convert_to_markdown():")
+    print("=" * 60)
+    markdown = convert_to_markdown(extracted)
+    print(markdown)
+
+    print("\n" + "=" * 60)
+    print("Testing extract_and_convert():")
+    print("=" * 60)
+    combined = extract_and_convert(sample_html)
+    print(combined)

@@ -264,3 +264,31 @@ Progress: 6/31
 
 ### Iteration 7 - 2026-01-16T17:00:00-06:00
 Progress: 7/31
+
+### Iteration 7 - 2026-01-16T16:43:45-06:00
+Progress: 7/31
+
+### Story: scrape-04 - Implement HTML to Markdown conversion
+**Completed:** 2026-01-16T17:05:00-06:00
+
+**What was implemented:**
+- Added convert_to_markdown(html) function to src/scraper/extractor.py
+- Uses markdownify library for HTML to Markdown conversion
+- Configurable options: code_language (default "q"), heading_style ("ATX" for # symbols)
+- Cleans up excessive blank lines (max 2 consecutive)
+- Strips leading/trailing whitespace
+- Added extract_and_convert() convenience function combining extraction and conversion
+- Updated test section to demonstrate all three functions
+
+**Files modified:**
+- src/scraper/extractor.py (updated)
+
+**Learnings for future iterations:**
+- markdownify handles code blocks, headings, lists, bold, italic out of the box
+- The code_language parameter sets default language for code blocks
+- ATX heading style uses # symbols (H1=1#, H2=2#, etc)
+- markdownify's strip parameter removes specified tags entirely
+- Excessive blank lines need post-processing cleanup
+
+### Iteration 8 - 2026-01-16T17:05:00-06:00
+Progress: 8/31

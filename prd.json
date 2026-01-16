@@ -65,7 +65,7 @@
       "phase": 1,
       "title": "Implement HTML to Markdown conversion",
       "description": "Add convert_to_markdown(html) function to extractor.py that converts clean HTML to well-formatted Markdown preserving code blocks and headings.",
-      "passes": false,
+      "passes": true,
       "priority": 8
     },
     {

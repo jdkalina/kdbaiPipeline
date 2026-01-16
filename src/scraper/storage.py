@@ -1,9 +1,11 @@
 """File storage for scraped content.
 
 This module provides functions to save scraped content to disk with unique
-filenames derived from URLs, and to check for existing files.
+filenames derived from URLs, and to check for existing files. Also includes
+content hashing for change detection and idempotency.
 """
 
+import hashlib
 import logging
 import re
 from pathlib import Path
@@ -14,6 +16,25 @@ logger = logging.getLogger(__name__)
 
 # Default output directory
 DEFAULT_OUTPUT_DIR = Path("data/raw")
+
+
+def compute_hash(content: str) -> str:
+    """Compute a SHA256 hash of the given content.
+
+    Used for change detection - if the hash matches a previously stored hash,
+    the content hasn't changed and can be skipped during re-scraping.
+
+    Args:
+        content: The text content to hash.
+
+    Returns:
+        Hexadecimal string representation of the SHA256 hash.
+    """
+    # Encode to bytes for hashing, normalize line endings for consistency
+    normalized_content = content.replace("\r\n", "\n")
+    content_bytes = normalized_content.encode("utf-8")
+    hash_obj = hashlib.sha256(content_bytes)
+    return hash_obj.hexdigest()
 
 
 def url_to_filename(url: str) -> str:
@@ -225,3 +246,27 @@ if __name__ == "__main__":
         # Test read_content
         read_back = read_content(test_url, output_dir)
         print(f"Read back matches: {read_back == test_content}")
+
+    # Test compute_hash
+    print()
+    print("=" * 60)
+    print("Testing compute_hash():")
+    print("=" * 60)
+    content1 = "Hello, world!"
+    content2 = "Hello, world!"
+    content3 = "Hello, World!"  # Different content
+
+    hash1 = compute_hash(content1)
+    hash2 = compute_hash(content2)
+    hash3 = compute_hash(content3)
+
+    print(f"Hash of 'Hello, world!': {hash1}")
+    print(f"Same content matches: {hash1 == hash2}")
+    print(f"Different content differs: {hash1 != hash3}")
+
+    # Test line ending normalization
+    content_unix = "line1\nline2\n"
+    content_windows = "line1\r\nline2\r\n"
+    hash_unix = compute_hash(content_unix)
+    hash_windows = compute_hash(content_windows)
+    print(f"Line ending normalization works: {hash_unix == hash_windows}")

@@ -321,3 +321,31 @@ Progress: 8/31
 
 ### Iteration 9 - 2026-01-16T17:10:00-06:00
 Progress: 9/31
+
+### Iteration 9 - 2026-01-16T16:47:55-06:00
+Progress: 9/31
+
+### Story: scrape-06 - Implement content hash for change detection
+**Completed:** 2026-01-16T17:15:00-06:00
+
+**What was implemented:**
+- Added compute_hash(content) function to src/scraper/storage.py
+- Uses SHA256 for cryptographic hashing (256-bit, 64-character hex output)
+- Normalizes line endings (CRLF → LF) before hashing for cross-platform consistency
+- Returns hexadecimal string representation of the hash
+- Added comprehensive tests verifying:
+  - Same content produces identical hashes
+  - Different content produces different hashes
+  - Line ending normalization works correctly
+
+**Files modified:**
+- src/scraper/storage.py (updated)
+
+**Learnings for future iterations:**
+- SHA256 produces 64-character hex strings, suitable for database storage
+- Line ending normalization is important for content comparison across OSes
+- hashlib is part of Python standard library, no additional dependencies needed
+- The hash will be stored in SQLite content_hash column for idempotency checks
+
+### Iteration 10 - 2026-01-16T17:15:00-06:00
+Progress: 10/31

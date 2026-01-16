@@ -81,7 +81,7 @@
       "phase": 1,
       "title": "Implement content hash for change detection",
       "description": "Add compute_hash(content) to storage.py using SHA256. Used for idempotency - skip re-scraping unchanged content.",
-      "passes": false,
+      "passes": true,
       "priority": 10
     },
     {

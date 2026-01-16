@@ -25,7 +25,7 @@
       "phase": 0,
       "title": "Create SQLite database schema",
       "description": "Create src/db.py with SQLite schema for status tracking: file_id, url, filename, scraped_at, content_hash, status, error_message. Include init_db() function.",
-      "passes": false,
+      "passes": true,
       "priority": 3
     },
     {

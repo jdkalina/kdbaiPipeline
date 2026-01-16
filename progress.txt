@@ -126,3 +126,29 @@ Progress: 1/31
 - Config structure supports both ollama and openai LLM providers
 - All settings have sensible defaults that can be overridden by environment variables where appropriate
 
+
+### Iteration 2 - 2026-01-16T16:34:46-06:00
+Progress: 2/31
+
+### Story: setup-03 - Create SQLite database schema
+**Completed:** 2026-01-16T16:45:00-06:00
+
+**What was implemented:**
+- Created src/db.py with SQLite schema for status tracking
+- Schema includes: file_id (PK), url (unique), filename, scraped_at, content_hash, status, error_message
+- Added init_db() function that creates the database and tables
+- Added indexes on status and url columns for efficient querying
+- Used sqlite3.Row factory for dict-like access to rows
+- Used Python logging module for status messages
+
+**Files modified:**
+- src/db.py (created)
+
+**Learnings for future iterations:**
+- Database path configured in config/config.yaml as "data/status.db"
+- init_db() creates parent directory if it doesn't exist
+- Row factory enables accessing columns by name (e.g., row['status'])
+- Indexes added proactively for status filtering (needed by embedding pipeline)
+
+### Iteration 3 - 2026-01-16T16:45:00-06:00
+Progress: 3/31

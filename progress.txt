@@ -709,3 +709,31 @@ Progress: 19/31
 
 ### Iteration 9 - 2026-01-16T21:35:00-06:00
 Progress: 20/31
+
+### Story: embed-08 - Add progress logging to embedding pipeline
+**Completed:** 2026-01-16T21:40:00-06:00
+
+**What was implemented:**
+- Enhanced structured logging throughout the embedding pipeline
+- Added pipeline start banner with configuration summary (model, chunk size, overlap, table name)
+- Added file progress indicators: `[X/Y]` format for each file processed
+- Added step-by-step logging in process_file():
+  - Reading file (with character count)
+  - Chunking complete (with chunk count)
+  - Embedding complete (with embedding count)
+  - Insert complete (with insert count)
+- Added debug-level logs for intermediate steps (enable with --verbose)
+- Updated completion/failure logs with progress indicators
+- Final summary shows files_processed, files_failed, total_chunks, total_inserted
+
+**Files modified:**
+- src/embedding/main.py
+
+**Learnings for future iterations:**
+- Indented sub-step logs (2-space prefix) improve readability
+- Progress indicators [X/Y] help track long-running processes
+- DEBUG level is good for verbose intermediate steps
+- Pipeline start banner summarizes key config for easy verification
+
+### Iteration 10 - 2026-01-16T21:40:00-06:00
+Progress: 21/31

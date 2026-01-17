@@ -109,21 +109,23 @@ def process_file(
         else:
             raise FileNotFoundError(f"Cannot find file for URL: {url}")
 
-    logger.info(f"Processing file: {filename} ({len(content)} chars)")
+    logger.info(f"  Reading file: {filename} ({len(content)} chars)")
 
     # Chunk the content
+    logger.debug(f"  Chunking content...")
     chunks = chunk_by_headings(content, source_file=filename)
     if not chunks:
-        logger.warning(f"No chunks created for {filename}")
+        logger.warning(f"  No chunks created for {filename}")
         return 0, 0
 
-    logger.info(f"Created {len(chunks)} chunks from {filename}")
+    logger.info(f"  Chunking complete: {len(chunks)} chunks created")
 
     # Generate embeddings for all chunks
     chunk_texts = [chunk.text for chunk in chunks]
+    logger.debug(f"  Generating embeddings for {len(chunk_texts)} chunks...")
     embeddings = embedder.generate_embeddings(chunk_texts)
 
-    logger.info(f"Generated {len(embeddings)} embeddings")
+    logger.info(f"  Embedding complete: {len(embeddings)} embeddings generated")
 
     # Prepare records for KDB.AI
     records = [
@@ -132,8 +134,9 @@ def process_file(
     ]
 
     # Insert into KDB.AI
+    logger.debug(f"  Inserting {len(records)} records into KDB.AI...")
     inserted = kdbai_client.insert_chunks(records)
-    logger.info(f"Inserted {inserted} chunks into KDB.AI")
+    logger.info(f"  Insert complete: {inserted} chunks inserted to KDB.AI")
 
     return len(chunks), inserted
 
@@ -161,6 +164,17 @@ def run_pipeline(
     # Setup paths
     db_path = Path(config.get("database", {}).get("path", "data/status.db"))
     raw_dir = Path("data/raw")
+
+    # Log pipeline configuration
+    embedding_config = config.get("embedding", {})
+    kdbai_config = config.get("kdbai", {})
+    logger.info("=" * 60)
+    logger.info("Starting Embedding Pipeline")
+    logger.info(f"  Model: {embedding_config.get('model_name', 'BAAI/bge-small-en-v1.5')}")
+    logger.info(f"  Chunk size: {embedding_config.get('chunk_size', 512)} tokens")
+    logger.info(f"  Chunk overlap: {embedding_config.get('chunk_overlap', 50)} tokens")
+    logger.info(f"  KDB.AI table: {kdbai_config.get('table_name', 'q4m_chunks')}")
+    logger.info("=" * 60)
 
     # Initialize database connection
     conn = init_db(db_path)
@@ -196,12 +210,13 @@ def run_pipeline(
         "total_inserted": 0,
     }
 
-    for file_row in files:
+    total_files = len(files)
+    for file_index, file_row in enumerate(files, 1):
         file_id = file_row["file_id"]
         url = file_row["url"]
         filename = file_row["filename"]
 
-        logger.info(f"Processing: {url}")
+        logger.info(f"[{file_index}/{total_files}] Processing: {url}")
 
         try:
             chunks_created, chunks_inserted = process_file(
@@ -220,10 +235,13 @@ def run_pipeline(
             stats["total_chunks"] += chunks_created
             stats["total_inserted"] += chunks_inserted
 
-            logger.info(f"Completed: {filename} ({chunks_created} chunks)")
+            logger.info(
+                f"[{file_index}/{total_files}] Completed: {filename} "
+                f"({chunks_created} chunks, {chunks_inserted} inserted)"
+            )
 
         except Exception as e:
-            logger.error(f"Failed to process {url}: {e}")
+            logger.error(f"[{file_index}/{total_files}] Failed to process {url}: {e}")
             update_status(conn, file_id, "error", error_message=str(e))
             stats["files_failed"] += 1
 

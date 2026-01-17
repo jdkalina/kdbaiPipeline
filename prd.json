@@ -169,7 +169,7 @@
       "phase": 2,
       "title": "Add progress logging to embedding pipeline",
       "description": "Update embedding main.py with structured logging: files processed, chunks created, embeddings generated, insert progress.",
-      "passes": false,
+      "passes": true,
       "priority": 21
     },
     {

@@ -914,3 +914,30 @@ Progress: 27/31
 
 ### Iteration 17 - 2026-01-16T22:15:00-06:00
 Progress: 28/31
+
+### Story: chat-02 - Integrate retrieval API with chat
+**Completed:** 2026-01-16T22:20:00-06:00
+
+**What was implemented:**
+- Added retrieve_context() function to call search_similar() from query.py
+- Added format_context() to display retrieved chunks with chapter, heading, text preview
+- Updated respond() to return both response and context
+- Redesigned interface with two-column layout:
+  - Left column (scale=2): Chat and input
+  - Right column (scale=1): Retrieved context panel
+- Context panel shows formatted results with source links
+- Graceful handling when no results found
+- Placeholder for LLM integration (chat-03)
+
+**Files modified:**
+- src/chat/main.py
+
+**Learnings for future iterations:**
+- Direct import of search_similar() avoids HTTP overhead vs calling /query
+- gr.Markdown can render formatted text with links
+- gr.Column with scale parameter controls proportional width
+- Truncating chunk text to 500 chars prevents UI overflow
+- Return tuple from respond() to update multiple UI components
+
+### Iteration 18 - 2026-01-16T22:20:00-06:00
+Progress: 29/31

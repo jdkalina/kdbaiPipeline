@@ -233,7 +233,7 @@
       "phase": 4,
       "title": "Integrate retrieval API with chat",
       "description": "Update chat main.py to call /query endpoint on user input. Display retrieved chunks below the chat.",
-      "passes": false,
+      "passes": true,
       "priority": 29
     },
     {

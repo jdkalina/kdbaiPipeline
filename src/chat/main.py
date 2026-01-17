@@ -11,6 +11,8 @@ from typing import Optional
 import gradio as gr
 import yaml
 
+from src.api.query import search_similar
+
 logger = logging.getLogger(__name__)
 
 
@@ -25,7 +27,59 @@ config = load_config()
 chat_config = config.get("chat", {})
 
 
-def respond(message: str, history: list[tuple[str, str]]) -> str:
+def retrieve_context(query: str, top_k: int = 5) -> list[dict]:
+    """Retrieve relevant document chunks for a query.
+
+    Args:
+        query: The user's question.
+        top_k: Number of results to retrieve.
+
+    Returns:
+        List of search results with text and metadata.
+    """
+    try:
+        results = search_similar(query_text=query, top_k=top_k)
+        logger.info(f"Retrieved {len(results)} chunks for query")
+        return results
+    except Exception as e:
+        logger.error(f"Failed to retrieve context: {e}")
+        return []
+
+
+def format_context(results: list[dict]) -> str:
+    """Format retrieved chunks for display.
+
+    Args:
+        results: List of search results.
+
+    Returns:
+        Formatted string showing retrieved context.
+    """
+    if not results:
+        return "*No relevant documentation found.*"
+
+    formatted_parts = []
+    for i, result in enumerate(results, 1):
+        chapter = result.get("chapter", "Unknown")
+        heading = result.get("heading", "")
+        text = result.get("text", "")[:500]  # Truncate long chunks
+        url = result.get("url", "")
+
+        part = f"**[{i}] {chapter}**"
+        if heading:
+            part += f" - {heading}"
+        part += f"\n{text}"
+        if len(result.get("text", "")) > 500:
+            part += "..."
+        if url:
+            part += f"\n[Source]({url})"
+
+        formatted_parts.append(part)
+
+    return "\n\n---\n\n".join(formatted_parts)
+
+
+def respond(message: str, history: list[tuple[str, str]]) -> tuple[str, str]:
     """Process a user message and generate a response.
 
     Args:
@@ -33,14 +87,30 @@ def respond(message: str, history: list[tuple[str, str]]) -> str:
         history: List of (user, assistant) message tuples.
 
     Returns:
-        The assistant's response.
+        Tuple of (assistant response, formatted context).
     """
     if not message or not message.strip():
-        return "Please enter a question about Q for Mortals."
+        return "Please enter a question about Q for Mortals.", ""
 
-    # Placeholder response - will be replaced with actual RAG in chat-02/chat-03
     logger.info(f"Received message: {message[:50]}...")
-    return f"You asked: '{message}'\n\nThis is a placeholder response. The RAG integration will be added in the next stories."
+
+    # Retrieve relevant context from KDB.AI
+    results = retrieve_context(message)
+    context_display = format_context(results)
+
+    if not results:
+        response = (
+            "I couldn't find any relevant documentation for your question. "
+            "Please try rephrasing or ask about a different topic from Q for Mortals."
+        )
+    else:
+        # Placeholder - LLM integration will be added in chat-03
+        response = (
+            f"Based on the Q for Mortals documentation, I found {len(results)} relevant sections.\n\n"
+            "*(LLM-generated answer will appear here after chat-03 is implemented)*"
+        )
+
+    return response, context_display
 
 
 def create_interface() -> gr.Blocks:
@@ -61,48 +131,57 @@ def create_interface() -> gr.Blocks:
             """
         )
 
-        chatbot = gr.Chatbot(
-            label="Chat",
-            height=400,
-            show_copy_button=True,
-        )
-
         with gr.Row():
-            msg = gr.Textbox(
-                label="Your question",
-                placeholder="Ask a question about Q/kdb+...",
-                scale=4,
-                show_label=False,
-            )
-            submit_btn = gr.Button("Send", variant="primary", scale=1)
+            with gr.Column(scale=2):
+                chatbot = gr.Chatbot(
+                    label="Chat",
+                    height=400,
+                    show_copy_button=True,
+                )
 
-        with gr.Row():
-            clear_btn = gr.Button("Clear Chat")
+                with gr.Row():
+                    msg = gr.Textbox(
+                        label="Your question",
+                        placeholder="Ask a question about Q/kdb+...",
+                        scale=4,
+                        show_label=False,
+                    )
+                    submit_btn = gr.Button("Send", variant="primary", scale=1)
+
+                with gr.Row():
+                    clear_btn = gr.Button("Clear Chat")
+
+            with gr.Column(scale=1):
+                gr.Markdown("### Retrieved Context")
+                context_display = gr.Markdown(
+                    value="*Context from Q for Mortals documentation will appear here after you ask a question.*",
+                    label="Context",
+                )
 
         # Event handlers
         def user_submit(message: str, history: list) -> tuple:
             """Handle user message submission."""
             if not message.strip():
-                return "", history
-            response = respond(message, history)
+                return "", history, ""
+            response, context = respond(message, history)
             history = history + [(message, response)]
-            return "", history
+            return "", history, context
 
         msg.submit(
             user_submit,
             inputs=[msg, chatbot],
-            outputs=[msg, chatbot],
+            outputs=[msg, chatbot, context_display],
         )
 
         submit_btn.click(
             user_submit,
             inputs=[msg, chatbot],
-            outputs=[msg, chatbot],
+            outputs=[msg, chatbot, context_display],
         )
 
         clear_btn.click(
-            lambda: ([], ""),
-            outputs=[chatbot, msg],
+            lambda: ([], "", "*Context will appear here after you ask a question.*"),
+            outputs=[chatbot, msg, context_display],
         )
 
         gr.Markdown(

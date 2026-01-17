@@ -113,7 +113,7 @@
       "phase": 2,
       "title": "Implement heading-aware text chunker",
       "description": "Create src/embedding/chunker.py with chunk_by_headings(markdown) that splits on H1/H2/H3 headings. Return list of chunks with heading hierarchy metadata.",
-      "passes": false,
+      "passes": true,
       "priority": 14
     },
     {

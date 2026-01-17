@@ -496,3 +496,31 @@ Progress: 12/31
 
 ### Iteration 2 - 2026-01-16T21:11:23-06:00
 Progress: 13/31
+
+### Iteration 2 - 2026-01-16T21:12:03-06:00
+Progress: 13/31
+
+### Story: embed-01 - Implement heading-aware text chunker
+**Completed:** 2026-01-16T21:15:00-06:00
+
+**What was implemented:**
+- Created src/embedding/chunker.py with heading-aware text chunking
+- Chunk dataclass with metadata: text, heading_h1, heading_h2, heading_h3, chunk_index, source_file
+- `chunk_by_headings(markdown, source_file)` function that splits on H1/H2/H3 headings
+- Preserves heading hierarchy metadata for each chunk (e.g., "Chapter 1 > Section 1.1 > Subsection 1.1.1")
+- Includes heading text in each chunk for context
+- Helper properties: `heading_hierarchy` (full path), `heading` (most specific heading)
+- Comprehensive logging of chunk creation
+
+**Files modified:**
+- src/embedding/chunker.py (created)
+
+**Learnings for future iterations:**
+- Regex `^(#{1,3})\s+(.+)$` reliably matches ATX-style headings
+- Heading hierarchy resets lower levels when a higher level is encountered (H1 resets H2/H3)
+- Include the heading line itself in the chunk for better embedding context
+- The Chunk dataclass provides clean API for accessing metadata
+- embed-02 will need to add size limits with overlap to this foundation
+
+### Iteration 3 - 2026-01-16T21:15:00-06:00
+Progress: 14/31

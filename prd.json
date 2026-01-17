@@ -129,7 +129,7 @@
       "phase": 2,
       "title": "Implement FastEmbed wrapper",
       "description": "Create src/embedding/embedder.py with generate_embeddings(texts) using FastEmbed BAAI/bge-small-en-v1.5 model. Return list of vectors.",
-      "passes": false,
+      "passes": true,
       "priority": 16
     },
     {

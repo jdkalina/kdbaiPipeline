@@ -554,3 +554,31 @@ Progress: 14/31
 
 ### Iteration 4 - 2026-01-16T21:16:22-06:00
 Progress: 15/31
+
+### Iteration 4 - 2026-01-16T21:17:01-06:00
+Progress: 15/31
+
+### Story: embed-03 - Implement FastEmbed wrapper
+**Completed:** 2026-01-16T21:20:00-06:00
+
+**What was implemented:**
+- Created src/embedding/embedder.py with FastEmbed wrapper
+- Embedder class with lazy model loading for memory efficiency
+- `generate_embeddings(texts)` method for batch embedding generation
+- `generate_embedding(text)` method for single text embedding
+- Singleton pattern via `get_embedder()` for simple usage
+- Convenience functions `generate_embeddings()` and `generate_embedding()`
+- Configuration loaded from config/config.yaml (model_name, batch_size, dimensions)
+- Default model: BAAI/bge-small-en-v1.5 (384 dimensions)
+- Added numpy to requirements.txt (required by fastembed)
+
+**Files modified:**
+- src/embedding/embedder.py (created)
+- requirements.txt (added numpy dependency)
+
+**Learnings for future iterations:**
+- FastEmbed's embed() returns a generator, must convert to list
+- Lazy model loading avoids memory allocation until first use
+- The model outputs numpy arrays of shape (384,) for bge-small-en-v1.5
+- Singleton embedder avoids reloading model for multiple calls
+

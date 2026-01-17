@@ -97,7 +97,7 @@
       "phase": 1,
       "title": "Create main scraper orchestrator",
       "description": "Create src/scraper/main.py that orchestrates the full scrape: discover URLs, fetch each, extract, convert, save, update DB. Include progress logging.",
-      "passes": false,
+      "passes": true,
       "priority": 12
     },
     {

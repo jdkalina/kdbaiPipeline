@@ -377,3 +377,93 @@ Progress: 10/31
 
 ### Iteration 11 - 2026-01-16T17:20:00-06:00
 Progress: 11/31
+
+### Iteration 11 - 2026-01-16T16:51:03-06:00
+Progress: 11/31
+
+### Iteration 12 - 2026-01-16T16:51:50-06:00
+Progress: 11/31
+
+### Iteration 13 - 2026-01-16T16:51:57-06:00
+Progress: 11/31
+
+### Iteration 14 - 2026-01-16T16:52:05-06:00
+Progress: 11/31
+
+### Iteration 15 - 2026-01-16T16:52:12-06:00
+Progress: 11/31
+
+### Iteration 16 - 2026-01-16T16:52:19-06:00
+Progress: 11/31
+
+### Iteration 17 - 2026-01-16T16:52:26-06:00
+Progress: 11/31
+
+### Iteration 18 - 2026-01-16T16:52:33-06:00
+Progress: 11/31
+
+### Iteration 19 - 2026-01-16T16:52:40-06:00
+Progress: 11/31
+
+### Iteration 20 - 2026-01-16T16:52:46-06:00
+Progress: 11/31
+
+### Iteration 21 - 2026-01-16T16:52:53-06:00
+Progress: 11/31
+
+### Iteration 22 - 2026-01-16T16:53:00-06:00
+Progress: 11/31
+
+### Iteration 23 - 2026-01-16T16:53:07-06:00
+Progress: 11/31
+
+### Iteration 24 - 2026-01-16T16:53:14-06:00
+Progress: 11/31
+
+### Iteration 25 - 2026-01-16T16:53:21-06:00
+Progress: 11/31
+
+### Iteration 26 - 2026-01-16T16:53:28-06:00
+Progress: 11/31
+
+### Iteration 27 - 2026-01-16T16:53:35-06:00
+Progress: 11/31
+
+### Iteration 28 - 2026-01-16T16:53:42-06:00
+Progress: 11/31
+
+### Iteration 29 - 2026-01-16T16:53:49-06:00
+Progress: 11/31
+
+### Iteration 30 - 2026-01-16T16:53:56-06:00
+Progress: 11/31
+
+### Story: scrape-08 - Create main scraper orchestrator
+**Completed:** 2026-01-16T17:00:00-06:00
+
+**What was implemented:**
+- Created src/scraper/main.py with full scrape pipeline orchestration
+- Loads configuration from config/config.yaml
+- Discovers chapter URLs using discover_chapter_urls()
+- Fetches each page with rate limiting using Fetcher class
+- Extracts and converts HTML to Markdown using extract_and_convert()
+- Computes content hash for each file using compute_hash()
+- Saves content to data/raw/ using save_content()
+- Updates SQLite database with insert_scraped_file()
+- Includes comprehensive progress logging with statistics
+- CLI entry point with argparse for --config, --output-dir, --db-path flags
+- Returns statistics dict with total, scraped, skipped, failed counts
+- Already-scraped URLs are skipped (checks database first)
+
+**Files modified:**
+- src/scraper/main.py (created)
+
+**Learnings for future iterations:**
+- The scraper checks if URL already exists in database before scraping
+- Uses context manager (with Fetcher) to ensure session cleanup
+- All components are loosely coupled via function calls
+- Statistics tracking enables easy monitoring of scrape progress
+- Exit code 1 if any failures occurred, useful for CI/CD
+
+### Iteration 31 - 2026-01-16T17:00:00-06:00
+Progress: 12/31

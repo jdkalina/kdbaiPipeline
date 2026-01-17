@@ -5,10 +5,12 @@ Provides a conversational interface for querying Q4M documentation.
 """
 
 import logging
+import os
 from pathlib import Path
 from typing import Optional
 
 import gradio as gr
+import httpx
 import yaml
 
 from src.api.query import search_similar
@@ -25,6 +27,153 @@ def load_config(config_path: Path = Path("config/config.yaml")) -> dict:
 # Load configuration
 config = load_config()
 chat_config = config.get("chat", {})
+llm_config = chat_config.get("llm", {})
+
+
+def build_rag_prompt(query: str, context_chunks: list[dict]) -> str:
+    """Build a RAG prompt with retrieved context.
+
+    Args:
+        query: The user's question.
+        context_chunks: List of retrieved document chunks.
+
+    Returns:
+        Formatted prompt string for the LLM.
+    """
+    context_parts = []
+    for i, chunk in enumerate(context_chunks, 1):
+        chapter = chunk.get("chapter", "")
+        heading = chunk.get("heading", "")
+        text = chunk.get("text", "")
+
+        source = f"{chapter}"
+        if heading:
+            source += f" > {heading}"
+
+        context_parts.append(f"[Source {i}: {source}]\n{text}")
+
+    context_text = "\n\n".join(context_parts)
+
+    prompt = f"""You are a helpful assistant that answers questions about the Q programming language and kdb+ database using the Q for Mortals documentation.
+
+Use the following context from the Q for Mortals documentation to answer the user's question. If the context doesn't contain enough information to answer, say so and suggest what topics might be relevant.
+
+Context:
+{context_text}
+
+User Question: {query}
+
+Answer:"""
+
+    return prompt
+
+
+def generate_answer_ollama(prompt: str) -> str:
+    """Generate an answer using Ollama.
+
+    Args:
+        prompt: The prompt to send to the LLM.
+
+    Returns:
+        The generated answer.
+    """
+    endpoint = llm_config.get("ollama_endpoint", "http://localhost:11434")
+    model = llm_config.get("model", "llama3.2")
+    temperature = llm_config.get("temperature", 0.7)
+    max_tokens = llm_config.get("max_tokens", 1024)
+
+    try:
+        with httpx.Client(timeout=60.0) as client:
+            response = client.post(
+                f"{endpoint}/api/generate",
+                json={
+                    "model": model,
+                    "prompt": prompt,
+                    "stream": False,
+                    "options": {
+                        "temperature": temperature,
+                        "num_predict": max_tokens,
+                    },
+                },
+            )
+            response.raise_for_status()
+            result = response.json()
+            return result.get("response", "No response generated.")
+    except httpx.TimeoutException:
+        logger.error("Ollama request timed out")
+        return "The request timed out. Please try again or ask a simpler question."
+    except httpx.HTTPError as e:
+        logger.error(f"Ollama HTTP error: {e}")
+        return f"Error connecting to Ollama: {e}"
+    except Exception as e:
+        logger.error(f"Unexpected error with Ollama: {e}")
+        return f"An unexpected error occurred: {e}"
+
+
+def generate_answer_openai(prompt: str) -> str:
+    """Generate an answer using OpenAI API.
+
+    Args:
+        prompt: The prompt to send to the LLM.
+
+    Returns:
+        The generated answer.
+    """
+    try:
+        import openai
+    except ImportError:
+        return "OpenAI library not installed. Please run: pip install openai"
+
+    api_key = os.environ.get("OPENAI_API_KEY")
+    if not api_key:
+        return "OPENAI_API_KEY environment variable not set."
+
+    model = llm_config.get("openai_model", "gpt-4o-mini")
+    temperature = llm_config.get("temperature", 0.7)
+    max_tokens = llm_config.get("max_tokens", 1024)
+
+    try:
+        client = openai.OpenAI(api_key=api_key)
+        response = client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant for Q/kdb+ programming."},
+                {"role": "user", "content": prompt},
+            ],
+            temperature=temperature,
+            max_tokens=max_tokens,
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        logger.error(f"OpenAI error: {e}")
+        return f"Error with OpenAI: {e}"
+
+
+def generate_answer(query: str, context_chunks: list[dict]) -> str:
+    """Generate an answer using the configured LLM provider.
+
+    Args:
+        query: The user's question.
+        context_chunks: List of retrieved document chunks.
+
+    Returns:
+        The generated answer.
+    """
+    if not context_chunks:
+        return (
+            "I couldn't find any relevant documentation for your question. "
+            "Please try rephrasing or ask about a different topic from Q for Mortals."
+        )
+
+    prompt = build_rag_prompt(query, context_chunks)
+    logger.debug(f"Generated prompt ({len(prompt)} chars)")
+
+    provider = llm_config.get("provider", "ollama")
+
+    if provider == "openai":
+        return generate_answer_openai(prompt)
+    else:
+        return generate_answer_ollama(prompt)
 
 
 def retrieve_context(query: str, top_k: int = 5) -> list[dict]:
@@ -98,17 +247,8 @@ def respond(message: str, history: list[tuple[str, str]]) -> tuple[str, str]:
     results = retrieve_context(message)
     context_display = format_context(results)
 
-    if not results:
-        response = (
-            "I couldn't find any relevant documentation for your question. "
-            "Please try rephrasing or ask about a different topic from Q for Mortals."
-        )
-    else:
-        # Placeholder - LLM integration will be added in chat-03
-        response = (
-            f"Based on the Q for Mortals documentation, I found {len(results)} relevant sections.\n\n"
-            "*(LLM-generated answer will appear here after chat-03 is implemented)*"
-        )
+    # Generate answer using LLM
+    response = generate_answer(message, results)
 
     return response, context_display
 

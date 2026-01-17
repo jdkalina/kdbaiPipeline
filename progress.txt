@@ -941,3 +941,30 @@ Progress: 28/31
 
 ### Iteration 18 - 2026-01-16T22:20:00-06:00
 Progress: 29/31
+
+### Story: chat-03 - Add LLM integration for answer generation
+**Completed:** 2026-01-16T22:25:00-06:00
+
+**What was implemented:**
+- Added `build_rag_prompt(query, context_chunks)` to construct RAG prompts
+- Added `generate_answer_ollama(prompt)` for Ollama LLM integration
+- Added `generate_answer_openai(prompt)` for OpenAI API integration
+- Added `generate_answer(query, context_chunks)` to dispatch to configured provider
+- Ollama integration uses httpx with 60s timeout, configurable model/temperature/max_tokens
+- OpenAI integration uses openai library with configurable model settings
+- Provider selection from config: "ollama" or "openai"
+- Graceful error handling for timeouts, connection errors, missing API keys
+- Updated respond() to call generate_answer() instead of placeholder
+
+**Files modified:**
+- src/chat/main.py
+
+**Learnings for future iterations:**
+- httpx.Client is simpler than requests for sync HTTP with timeouts
+- Ollama /api/generate endpoint requires stream=False for non-streaming
+- OpenAI API key should come from environment variable, not config
+- RAG prompt includes numbered sources for citation tracking
+- Config defaults allow running with just ollama out of the box
+
+### Iteration 19 - 2026-01-16T22:25:00-06:00
+Progress: 30/31

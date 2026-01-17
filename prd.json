@@ -241,7 +241,7 @@
       "phase": 4,
       "title": "Add LLM integration for answer generation",
       "description": "Add generate_answer(query, context) that constructs prompt with retrieved chunks and calls LLM API (configurable: OpenAI or local ollama).",
-      "passes": false,
+      "passes": true,
       "priority": 30
     },
     {

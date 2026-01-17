@@ -193,7 +193,7 @@
       "phase": 3,
       "title": "Implement vector search endpoint",
       "description": "Add POST /query endpoint that accepts {query: str, top_k: int=5}, embeds query, searches KDB.AI, returns ranked results with metadata.",
-      "passes": false,
+      "passes": true,
       "priority": 24
     },
     {

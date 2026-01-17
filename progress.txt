@@ -785,3 +785,28 @@ Progress: 22/31
 
 ### Iteration 12 - 2026-01-16T21:50:00-06:00
 Progress: 23/31
+
+### Story: query-03 - Implement vector search endpoint
+**Completed:** 2026-01-16T21:55:00-06:00
+
+**What was implemented:**
+- Added POST /query endpoint to src/api/main.py
+- Created Pydantic models for request/response validation:
+  - QueryRequest: query (str, required), top_k (int, 1-20, default 5)
+  - SearchResult: chunk_id, text, chapter, heading, url
+  - QueryResponse: query, results, count
+- Endpoint calls search_similar() from query.py
+- Formats KDB.AI results into structured response
+- Logs each query with first 50 chars and top_k value
+
+**Files modified:**
+- src/api/main.py
+
+**Learnings for future iterations:**
+- Pydantic Field() with ge/le for validation constraints
+- response_model parameter auto-validates output
+- Use .get() with defaults for safe dict access from KDB.AI results
+- min_length=1 prevents empty query strings
+
+### Iteration 13 - 2026-01-16T21:55:00-06:00
+Progress: 24/31

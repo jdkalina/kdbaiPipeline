@@ -6,10 +6,14 @@ Provides endpoints for querying the Q4M documentation using semantic search.
 
 import logging
 from pathlib import Path
+from typing import Optional
 
 import yaml
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, Field
+
+from src.api.query import search_similar
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +57,73 @@ async def health_check():
         "version": "1.0.0",
         "service": "q4m-rag-api",
     }
+
+
+# Request/Response models for /query endpoint
+class QueryRequest(BaseModel):
+    """Request model for the query endpoint."""
+    query: str = Field(..., description="The search query text", min_length=1)
+    top_k: int = Field(
+        default=5,
+        description="Number of results to return",
+        ge=1,
+        le=20,
+    )
+
+
+class SearchResult(BaseModel):
+    """A single search result."""
+    chunk_id: str = Field(..., description="Unique identifier for the chunk")
+    text: str = Field(..., description="The chunk text content")
+    chapter: str = Field(..., description="Chapter name")
+    heading: str = Field(..., description="Section heading")
+    url: str = Field(..., description="Source URL")
+
+
+class QueryResponse(BaseModel):
+    """Response model for the query endpoint."""
+    query: str = Field(..., description="The original query")
+    results: list[SearchResult] = Field(..., description="Search results")
+    count: int = Field(..., description="Number of results returned")
+
+
+@app.post("/query", response_model=QueryResponse)
+async def query_documents(request: QueryRequest):
+    """Search for documents matching the query.
+
+    Embeds the query text and searches the KDB.AI vector database
+    for the most similar document chunks.
+
+    Args:
+        request: QueryRequest with query text and optional top_k.
+
+    Returns:
+        QueryResponse with ranked search results.
+    """
+    logger.info(f"Query received: '{request.query[:50]}...' (top_k={request.top_k})")
+
+    # Search for similar documents
+    results = search_similar(
+        query_text=request.query,
+        top_k=request.top_k,
+    )
+
+    # Format results
+    formatted_results = []
+    for result in results:
+        formatted_results.append(SearchResult(
+            chunk_id=result.get("chunk_id", ""),
+            text=result.get("text", ""),
+            chapter=result.get("chapter", ""),
+            heading=result.get("heading", ""),
+            url=result.get("url", ""),
+        ))
+
+    return QueryResponse(
+        query=request.query,
+        results=formatted_results,
+        count=len(formatted_results),
+    )
 
 
 @app.on_event("startup")

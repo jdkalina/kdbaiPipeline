@@ -177,7 +177,7 @@
       "phase": 3,
       "title": "Create FastAPI app skeleton",
       "description": "Create src/api/main.py with FastAPI app, health check endpoint at GET /health, and CORS middleware.",
-      "passes": false,
+      "passes": true,
       "priority": 22
     },
     {

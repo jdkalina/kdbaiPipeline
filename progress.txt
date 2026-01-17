@@ -737,3 +737,27 @@ Progress: 20/31
 
 ### Iteration 10 - 2026-01-16T21:40:00-06:00
 Progress: 21/31
+
+### Story: query-01 - Create FastAPI app skeleton
+**Completed:** 2026-01-16T21:45:00-06:00
+
+**What was implemented:**
+- Created src/api/main.py with FastAPI application
+- GET /health endpoint returning status, version, and service name
+- CORS middleware configured to allow all origins (development mode)
+- Startup and shutdown event handlers with logging
+- Configuration loaded from config/config.yaml
+- main() function to run server with uvicorn
+- API title, description, and version metadata
+
+**Files modified:**
+- src/api/main.py (created)
+
+**Learnings for future iterations:**
+- FastAPI app is created at module level for uvicorn import
+- CORS middleware should be restricted in production
+- @app.on_event("startup") and @app.on_event("shutdown") for lifecycle hooks
+- uvicorn.run() with string "module:app" format for reload support
+
+### Iteration 11 - 2026-01-16T21:45:00-06:00
+Progress: 22/31

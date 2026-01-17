@@ -105,7 +105,7 @@
       "phase": 1,
       "title": "Add idempotency check to scraper",
       "description": "Update scraper main.py to check content hash before re-scraping. Skip files that haven't changed.",
-      "passes": false,
+      "passes": true,
       "priority": 13
     },
     {

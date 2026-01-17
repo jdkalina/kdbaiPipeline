@@ -7,6 +7,9 @@ This module orchestrates the full scrape pipeline:
 4. Save to disk
 5. Update SQLite database with status
 
+Includes idempotency support: content hashes are checked on re-scrape
+to skip files that haven't changed.
+
 Usage:
     python -m src.scraper.main [--config CONFIG_PATH]
 """
@@ -18,7 +21,7 @@ from typing import Optional
 
 import yaml
 
-from src.db import init_db, insert_scraped_file, get_file_by_url
+from src.db import init_db, insert_scraped_file, get_file_by_url, update_content_hash
 from src.scraper.discover import discover_chapter_urls
 from src.scraper.extractor import extract_and_convert
 from src.scraper.fetcher import Fetcher
@@ -68,6 +71,10 @@ def run_scraper(
     Discovers URLs, fetches pages, extracts content, saves to disk, and updates
     the database. Includes progress logging for each step.
 
+    Idempotency: Content hashes are compared on re-scrape. If a URL already
+    exists in the database and its content hash matches, the file is skipped.
+    If the hash differs, the file is updated.
+
     Args:
         config_path: Path to config file. Defaults to config/config.yaml.
         output_dir: Directory to save scraped files. Defaults to data/raw/.
@@ -76,8 +83,9 @@ def run_scraper(
     Returns:
         Dictionary with scrape statistics:
         - total: Total URLs discovered
-        - scraped: Number successfully scraped
-        - skipped: Number skipped (already in DB)
+        - scraped: Number of new files scraped
+        - updated: Number of files updated (content changed)
+        - skipped: Number skipped (content unchanged)
         - failed: Number that failed
     """
     # Load configuration
@@ -114,6 +122,7 @@ def run_scraper(
     stats = {
         "total": 0,
         "scraped": 0,
+        "updated": 0,
         "skipped": 0,
         "failed": 0,
     }
@@ -143,10 +152,6 @@ def run_scraper(
 
             # Check if already in database
             existing = get_file_by_url(conn, url)
-            if existing:
-                logger.info(f"  -> Skipping (already in database, status: {existing['status']})")
-                stats["skipped"] += 1
-                continue
 
             try:
                 # Fetch the page
@@ -163,12 +168,25 @@ def run_scraper(
                 # Compute content hash
                 content_hash = compute_hash(markdown)
 
-                # Save to disk
+                # Check idempotency: if file exists and hash matches, skip
+                if existing:
+                    old_hash = existing["content_hash"]
+                    if old_hash == content_hash:
+                        logger.info(f"  -> Skipping (content unchanged, hash: {content_hash[:12]}...)")
+                        stats["skipped"] += 1
+                        continue
+                    else:
+                        # Content has changed - update the file
+                        logger.info(f"  -> Content changed (old: {old_hash[:12]}..., new: {content_hash[:12]}...)")
+                        filename = save_content(url, markdown, output_dir)
+                        update_content_hash(conn, existing["file_id"], content_hash)
+                        logger.info(f"  -> Updated: {filename} ({len(markdown)} chars)")
+                        stats["updated"] += 1
+                        continue
+
+                # New file - save to disk and insert into database
                 filename = save_content(url, markdown, output_dir)
-
-                # Insert into database
                 insert_scraped_file(conn, url, filename, content_hash, status="scraped")
-
                 logger.info(f"  -> Saved: {filename} ({len(markdown)} chars)")
                 stats["scraped"] += 1
 
@@ -184,8 +202,9 @@ def run_scraper(
     logger.info("Scrape Complete - Summary")
     logger.info("-" * 60)
     logger.info(f"Total URLs:  {stats['total']}")
-    logger.info(f"Scraped:     {stats['scraped']}")
-    logger.info(f"Skipped:     {stats['skipped']}")
+    logger.info(f"New:         {stats['scraped']}")
+    logger.info(f"Updated:     {stats['updated']}")
+    logger.info(f"Unchanged:   {stats['skipped']}")
     logger.info(f"Failed:      {stats['failed']}")
     logger.info("=" * 60)
 

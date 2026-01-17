@@ -467,3 +467,32 @@ Progress: 11/31
 
 ### Iteration 31 - 2026-01-16T17:00:00-06:00
 Progress: 12/31
+
+### Story: scrape-09 - Add idempotency check to scraper
+**Completed:** 2026-01-16T21:11:23-06:00
+
+**What was implemented:**
+- Updated src/scraper/main.py to check content hash before re-scraping
+- Added import for `update_content_hash` from src.db
+- Modified scraping loop to:
+  1. Always fetch and extract content (needed for hash comparison)
+  2. Compare new hash against stored hash in database
+  3. Skip if hash matches (content unchanged)
+  4. Update file and database if hash differs (content changed)
+  5. Insert new record if URL not in database
+- Added new "updated" statistic to track changed files
+- Updated summary logging with clearer labels: New, Updated, Unchanged, Failed
+- Updated docstring to document idempotency behavior
+
+**Files modified:**
+- src/scraper/main.py
+
+**Learnings for future iterations:**
+- Idempotency check requires fetching content first (can't skip HTTP request entirely)
+- The `update_content_hash()` function already existed in db.py from scrape-07
+- Rate limiting is preserved since we still go through the Fetcher class
+- Content hash comparison uses first 12 chars in logs for readability
+- Stats renamed: "scraped" = new files, "skipped" = unchanged (better semantics)
+
+### Iteration 2 - 2026-01-16T21:11:23-06:00
+Progress: 13/31

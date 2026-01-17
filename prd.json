@@ -121,7 +121,7 @@
       "phase": 2,
       "title": "Add chunk size limits with overlap",
       "description": "Update chunker.py to enforce max token limit per chunk (configurable, default 512). Split large sections with configurable overlap.",
-      "passes": false,
+      "passes": true,
       "priority": 15
     },
     {

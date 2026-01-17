@@ -524,3 +524,33 @@ Progress: 13/31
 
 ### Iteration 3 - 2026-01-16T21:15:00-06:00
 Progress: 14/31
+
+### Iteration 3 - 2026-01-16T21:13:56-06:00
+Progress: 14/31
+
+### Story: embed-02 - Add chunk size limits with overlap
+**Completed:** 2026-01-16T21:16:22-06:00
+
+**What was implemented:**
+- Added `estimate_tokens(text)` function using ~4 chars/token heuristic for English text
+- Added `split_text_with_overlap(text, max_tokens, overlap_tokens)` function that:
+  - Splits by paragraphs first, then sentences, then lines, then words as fallback
+  - Maintains configurable overlap between chunks for context continuity
+  - Returns original text unchanged if under token limit
+- Updated `chunk_by_headings()` to accept optional `max_tokens` and `overlap_tokens` parameters
+- Loads default values from config/config.yaml (chunk_size: 512, chunk_overlap: 50)
+- Two-phase chunking: first by headings, then split oversized sections with overlap
+- Each resulting chunk maintains full heading hierarchy metadata
+
+**Files modified:**
+- src/embedding/chunker.py
+
+**Learnings for future iterations:**
+- Token estimation using 4 chars/token is a reasonable heuristic for embedding models
+- Splitting preserves structure: paragraphs > sentences > lines > words
+- Overlap is computed from end of current chunk to start of next chunk
+- The config values (chunk_size=512, chunk_overlap=50) align with typical embedding model contexts
+- Test confirmed overlap works: consecutive chunks share words at boundaries
+
+### Iteration 4 - 2026-01-16T21:16:22-06:00
+Progress: 15/31

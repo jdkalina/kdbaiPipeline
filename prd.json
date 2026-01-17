@@ -145,7 +145,7 @@
       "phase": 2,
       "title": "Define KDB.AI table schema",
       "description": "Add create_embeddings_table() to client.py with schema: chunk_id (str), text (str), embedding (vector), chapter (str), heading (str), url (str), file_id (str).",
-      "passes": false,
+      "passes": true,
       "priority": 18
     },
     {

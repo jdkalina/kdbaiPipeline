@@ -314,6 +314,35 @@ def create_table(
     return get_client().create_table(table_name=table_name, drop_if_exists=drop_if_exists)
 
 
+def create_embeddings_table(drop_if_exists: bool = False) -> Any:
+    """
+    Create the embeddings table with the standard schema for Q4M chunks.
+
+    This is a convenience function that creates a table with the following schema:
+        - chunk_id (str): Unique identifier for each chunk
+        - text (str): The actual text content of the chunk
+        - chapter (str): Chapter name/title from the source document
+        - heading (str): Section heading hierarchy (e.g., "Chapter > Section > Subsection")
+        - url (str): Source URL where the content was scraped from
+        - file_id (str): Reference to the file in the SQLite status database
+        - embeddings (float32s): Vector embeddings for similarity search
+
+    The table includes a flat index on the embeddings column using cosine similarity.
+
+    Args:
+        drop_if_exists: If True, drop existing table and recreate. Default False.
+
+    Returns:
+        The created table handle.
+
+    Example:
+        >>> from src.kdbai.client import create_embeddings_table
+        >>> table = create_embeddings_table()
+        >>> print(f"Table created: {table.name}")
+    """
+    return get_client().create_table(drop_if_exists=drop_if_exists)
+
+
 def insert_batch(data: list[dict]) -> int:
     """
     Insert records using the singleton client.

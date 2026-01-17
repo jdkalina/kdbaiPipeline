@@ -617,3 +617,34 @@ Progress: 16/31
 
 ### Iteration 6 - 2026-01-16T21:25:00-06:00
 Progress: 17/31
+
+### Iteration 6 - 2026-01-16T21:20:35-06:00
+Progress: 17/31
+
+### Story: embed-05 - Define KDB.AI table schema
+**Completed:** 2026-01-16T21:21:24-06:00
+
+**What was implemented:**
+- Added `create_embeddings_table()` convenience function to src/kdbai/client.py
+- Documents the standard schema for Q4M chunks:
+  - chunk_id (str): Unique identifier for each chunk
+  - text (str): The actual text content of the chunk
+  - chapter (str): Chapter name/title from the source document
+  - heading (str): Section heading hierarchy
+  - url (str): Source URL where the content was scraped from
+  - file_id (str): Reference to the file in the SQLite status database
+  - embeddings (float32s): Vector embeddings for similarity search
+- The function is a thin wrapper around create_table() with good documentation
+- Table includes flat index on embeddings using cosine similarity (CS)
+
+**Files modified:**
+- src/kdbai/client.py
+
+**Learnings for future iterations:**
+- The schema was already defined in create_table() from embed-04
+- This story adds a well-documented convenience function for discoverability
+- Schema uses float32s type for vectors (KDB.AI specific)
+- Index configuration comes from config: flat index, 384 dims, cosine similarity
+
+### Iteration 7 - 2026-01-16T21:21:24-06:00
+Progress: 18/31

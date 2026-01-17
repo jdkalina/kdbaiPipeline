@@ -137,7 +137,7 @@
       "phase": 2,
       "title": "Create KDB.AI client wrapper",
       "description": "Create src/kdbai/client.py with connect(), create_table(), insert_batch(), search() functions. Use kdbai-client library.",
-      "passes": false,
+      "passes": true,
       "priority": 17
     },
     {

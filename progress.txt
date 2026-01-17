@@ -582,3 +582,38 @@ Progress: 15/31
 - The model outputs numpy arrays of shape (384,) for bge-small-en-v1.5
 - Singleton embedder avoids reloading model for multiple calls
 
+
+### Iteration 5 - 2026-01-16T21:18:54-06:00
+Progress: 16/31
+
+### Story: embed-04 - Create KDB.AI client wrapper
+**Completed:** 2026-01-16T21:25:00-06:00
+
+**What was implemented:**
+- Created src/kdbai/client.py with KDB.AI client wrapper
+- KDBAIClient class with methods:
+  - `connect()`: Connect to KDB.AI server
+  - `create_table()`: Create table with schema and indexes
+  - `get_table()`: Get reference to existing table
+  - `insert_batch()`: Insert records into table
+  - `search()`: Vector similarity search with optional filters
+  - `close()`: Close connection
+- Configuration loaded from config/config.yaml (endpoint, database, table_name, index settings)
+- Endpoint can be overridden via KDBAI_ENDPOINT environment variable
+- Module-level convenience functions: `connect()`, `create_table()`, `insert_batch()`, `search()`
+- Singleton pattern via `get_client()` for simple usage
+- Comprehensive logging throughout
+
+**Files modified:**
+- src/kdbai/client.py (created)
+
+**Learnings for future iterations:**
+- KDB.AI uses `float32s` type for embedding vectors
+- Endpoint priority: function arg > env var > config file
+- Session and database handles are cached for connection reuse
+- Table existence check: `[t.name for t in db.tables]`
+- Search results come as pandas DataFrame, convert to list of dicts
+- embed-05 will add the specific table schema creation function
+
+### Iteration 6 - 2026-01-16T21:25:00-06:00
+Progress: 17/31

@@ -885,3 +885,32 @@ Progress: 26/31
 
 ### Iteration 16 - 2026-01-16T22:10:00-06:00
 Progress: 27/31
+
+### Story: chat-01 - Create Gradio chat interface skeleton
+**Completed:** 2026-01-16T22:15:00-06:00
+
+**What was implemented:**
+- Created src/chat/main.py with Gradio Blocks interface
+- Components:
+  - gr.Chatbot for chat history display with copy button
+  - gr.Textbox for user input
+  - Submit button (also triggers on Enter key)
+  - Clear Chat button
+- Placeholder respond() function for message handling
+- Configuration from config/config.yaml (host, port)
+- create_interface() returns Gradio Blocks app
+- main() entry point with logging setup and server launch
+- Soft theme for clean appearance
+
+**Files modified:**
+- src/chat/main.py (created)
+
+**Learnings for future iterations:**
+- gr.Blocks is more flexible than gr.Interface for custom layouts
+- msg.submit() handles Enter key, submit_btn.click() handles button
+- Use scale parameter in gr.Row for proportional sizing
+- show_copy_button=True adds copy functionality to chat messages
+- Gradio automatically maintains chat history state
+
+### Iteration 17 - 2026-01-16T22:15:00-06:00
+Progress: 28/31

@@ -225,7 +225,7 @@
       "phase": 4,
       "title": "Create Gradio chat interface skeleton",
       "description": "Create src/chat/main.py with basic Gradio Chatbot interface. Text input, submit button, chat history display.",
-      "passes": false,
+      "passes": true,
       "priority": 28
     },
     {

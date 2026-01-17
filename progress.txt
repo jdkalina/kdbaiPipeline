@@ -761,3 +761,27 @@ Progress: 21/31
 
 ### Iteration 11 - 2026-01-16T21:45:00-06:00
 Progress: 22/31
+
+### Story: query-02 - Implement query embedding generation
+**Completed:** 2026-01-16T21:50:00-06:00
+
+**What was implemented:**
+- Created src/api/query.py with query processing functions
+- `embed_query(text)` generates embedding for user query using same FastEmbed model
+- Uses lazy-loaded embedder via get_query_embedder()
+- Converts numpy array to list for JSON serialization
+- Validates that query text is not empty
+- Also added `search_similar()` helper function for convenience (combines embed + search)
+- Includes chapter_filter support for filtered searches
+
+**Files modified:**
+- src/api/query.py (created)
+
+**Learnings for future iterations:**
+- Using the same model for queries and documents is critical for semantic search
+- Lazy loading avoids model load on import
+- search_similar() combines embedding and search in one call
+- The 384-dimension embedding matches BAAI/bge-small-en-v1.5 output
+
+### Iteration 12 - 2026-01-16T21:50:00-06:00
+Progress: 23/31

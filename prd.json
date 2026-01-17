@@ -185,7 +185,7 @@
       "phase": 3,
       "title": "Implement query embedding generation",
       "description": "Create src/api/query.py with embed_query(text) that uses same FastEmbed model to embed user queries.",
-      "passes": false,
+      "passes": true,
       "priority": 23
     },
     {

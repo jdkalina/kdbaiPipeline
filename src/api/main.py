@@ -9,9 +9,10 @@ from pathlib import Path
 from typing import Optional
 
 import yaml
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel, Field, field_validator
 
 from src.api.query import search_similar
 
@@ -62,7 +63,7 @@ async def health_check():
 # Request/Response models for /query endpoint
 class QueryRequest(BaseModel):
     """Request model for the query endpoint."""
-    query: str = Field(..., description="The search query text", min_length=1)
+    query: str = Field(..., description="The search query text", min_length=1, max_length=1000)
     top_k: int = Field(
         default=5,
         description="Number of results to return",
@@ -72,7 +73,16 @@ class QueryRequest(BaseModel):
     chapter: Optional[str] = Field(
         default=None,
         description="Optional chapter name to filter results",
+        max_length=200,
     )
+
+    @field_validator("query")
+    @classmethod
+    def validate_query_not_whitespace(cls, v: str) -> str:
+        """Validate that query is not just whitespace."""
+        if not v.strip():
+            raise ValueError("Query cannot be empty or whitespace only")
+        return v.strip()
 
 
 class SearchResult(BaseModel):
@@ -95,7 +105,22 @@ class QueryResponse(BaseModel):
     )
 
 
-@app.post("/query", response_model=QueryResponse)
+class ErrorResponse(BaseModel):
+    """Error response model."""
+    error: str = Field(..., description="Error type")
+    message: str = Field(..., description="Error message")
+    details: Optional[str] = Field(default=None, description="Additional error details")
+
+
+@app.post(
+    "/query",
+    response_model=QueryResponse,
+    responses={
+        400: {"model": ErrorResponse, "description": "Invalid request"},
+        500: {"model": ErrorResponse, "description": "Server error"},
+        503: {"model": ErrorResponse, "description": "KDB.AI connection error"},
+    },
+)
 async def query_documents(request: QueryRequest):
     """Search for documents matching the query.
 
@@ -107,16 +132,49 @@ async def query_documents(request: QueryRequest):
 
     Returns:
         QueryResponse with ranked search results.
+
+    Raises:
+        HTTPException: On validation errors or KDB.AI connection issues.
     """
     filter_info = f", chapter='{request.chapter}'" if request.chapter else ""
     logger.info(f"Query received: '{request.query[:50]}...' (top_k={request.top_k}{filter_info})")
 
-    # Search for similar documents
-    results = search_similar(
-        query_text=request.query,
-        top_k=request.top_k,
-        chapter_filter=request.chapter,
-    )
+    try:
+        # Search for similar documents
+        results = search_similar(
+            query_text=request.query,
+            top_k=request.top_k,
+            chapter_filter=request.chapter,
+        )
+    except ConnectionError as e:
+        logger.error(f"KDB.AI connection error: {e}")
+        raise HTTPException(
+            status_code=503,
+            detail=ErrorResponse(
+                error="connection_error",
+                message="Unable to connect to KDB.AI database",
+                details=str(e),
+            ).model_dump(),
+        )
+    except ValueError as e:
+        logger.error(f"Value error during query: {e}")
+        raise HTTPException(
+            status_code=400,
+            detail=ErrorResponse(
+                error="invalid_query",
+                message=str(e),
+            ).model_dump(),
+        )
+    except Exception as e:
+        logger.error(f"Unexpected error during query: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=ErrorResponse(
+                error="internal_error",
+                message="An unexpected error occurred",
+                details=str(e),
+            ).model_dump(),
+        )
 
     # Format results
     formatted_results = []

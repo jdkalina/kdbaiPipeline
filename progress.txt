@@ -832,3 +832,31 @@ Progress: 24/31
 
 ### Iteration 14 - 2026-01-16T22:00:00-06:00
 Progress: 25/31
+
+### Story: query-05 - Add request validation and error handling
+**Completed:** 2026-01-16T22:05:00-06:00
+
+**What was implemented:**
+- Added Pydantic field validators for request validation:
+  - query: min_length=1, max_length=1000, whitespace-only validation
+  - top_k: ge=1, le=20 (already existed)
+  - chapter: max_length=200
+- Added @field_validator to strip and validate query text
+- Created ErrorResponse model with error type, message, and optional details
+- Added try/except error handling in /query endpoint:
+  - ConnectionError -> 503 (KDB.AI connection issues)
+  - ValueError -> 400 (invalid query)
+  - Exception -> 500 (unexpected errors)
+- Added OpenAPI response documentation for error codes
+
+**Files modified:**
+- src/api/main.py
+
+**Learnings for future iterations:**
+- Pydantic v2 uses @field_validator decorator (not @validator)
+- HTTPException detail can be a dict for structured error responses
+- responses={} parameter documents error codes in OpenAPI
+- model_dump() (v2) replaces dict() (v1) for Pydantic models
+
+### Iteration 15 - 2026-01-16T22:05:00-06:00
+Progress: 26/31

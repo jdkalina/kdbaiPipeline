@@ -153,7 +153,7 @@
       "phase": 2,
       "title": "Implement batch insert to KDB.AI",
       "description": "Add insert_chunks(chunks_with_embeddings) to client.py that batches inserts (100 at a time) for efficiency.",
-      "passes": false,
+      "passes": true,
       "priority": 19
     },
     {

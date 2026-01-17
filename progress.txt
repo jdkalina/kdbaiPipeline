@@ -648,3 +648,29 @@ Progress: 17/31
 
 ### Iteration 7 - 2026-01-16T21:21:24-06:00
 Progress: 18/31
+
+### Iteration 7 - 2026-01-16T21:22:00-06:00
+Progress: 18/31
+
+### Story: embed-06 - Implement batch insert to KDB.AI
+**Completed:** 2026-01-16T21:30:00-06:00
+
+**What was implemented:**
+- Added `insert_chunks(chunks_with_embeddings)` method to KDBAIClient class
+- Method batches inserts in groups of 100 (configurable via `insert_batch_size` in config)
+- Uses ceiling division to calculate number of batches needed
+- Progress logging shows batch number, records inserted per batch, and running total
+- Added corresponding module-level convenience function `insert_chunks()`
+- Comprehensive docstrings with schema documentation and usage examples
+
+**Files modified:**
+- src/kdbai/client.py
+
+**Learnings for future iterations:**
+- The `insert_batch_size` config setting (default 100) controls batch size
+- Ceiling division: `(total + batch_size - 1) // batch_size` handles remainders
+- Progress logging at INFO level for start/end, DEBUG for per-batch details
+- The method returns total count of inserted records for verification
+
+### Iteration 8 - 2026-01-16T21:30:00-06:00
+Progress: 19/31

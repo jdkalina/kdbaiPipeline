@@ -213,6 +213,74 @@ class KDBAIClient:
 
         return len(data)
 
+    def insert_chunks(self, chunks_with_embeddings: list[dict]) -> int:
+        """
+        Insert chunks with embeddings in batches for efficiency.
+
+        This method handles large datasets by splitting them into smaller batches
+        (default 100 records per batch) to avoid memory issues and ensure reliable
+        insertion into KDB.AI.
+
+        Args:
+            chunks_with_embeddings: List of dicts with keys matching schema columns:
+                - chunk_id (str): Unique identifier for the chunk
+                - text (str): The chunk text content
+                - chapter (str): Chapter name from source document
+                - heading (str): Section heading hierarchy
+                - url (str): Source URL
+                - file_id (str): Reference to file in SQLite database
+                - embeddings (list[float]): Vector embedding (384 dimensions)
+
+        Returns:
+            Total number of records inserted.
+
+        Example:
+            >>> from src.kdbai.client import get_client
+            >>> client = get_client()
+            >>> chunks = [
+            ...     {
+            ...         "chunk_id": "ch1_001",
+            ...         "text": "Q is a programming language...",
+            ...         "chapter": "1 Q Primer",
+            ...         "heading": "Introduction",
+            ...         "url": "https://code.kx.com/q4m3/1_Q_Primer/",
+            ...         "file_id": "abc123",
+            ...         "embeddings": [0.1, 0.2, ...]  # 384 floats
+            ...     },
+            ...     # ... more chunks
+            ... ]
+            >>> inserted = client.insert_chunks(chunks)
+            >>> print(f"Inserted {inserted} chunks")
+        """
+        if not chunks_with_embeddings:
+            logger.warning("Empty data provided to insert_chunks")
+            return 0
+
+        if self._table is None:
+            self._table = self.get_table()
+
+        total_chunks = len(chunks_with_embeddings)
+        batch_size = self.insert_batch_size
+        total_inserted = 0
+        num_batches = (total_chunks + batch_size - 1) // batch_size  # Ceiling division
+
+        logger.info(f"Inserting {total_chunks} chunks in {num_batches} batches of up to {batch_size}")
+
+        for batch_num in range(num_batches):
+            start_idx = batch_num * batch_size
+            end_idx = min(start_idx + batch_size, total_chunks)
+            batch = chunks_with_embeddings[start_idx:end_idx]
+
+            df = pd.DataFrame(batch)
+            self._table.insert(df)
+
+            batch_inserted = len(batch)
+            total_inserted += batch_inserted
+            logger.debug(f"Batch {batch_num + 1}/{num_batches}: inserted {batch_inserted} records (total: {total_inserted}/{total_chunks})")
+
+        logger.info(f"Successfully inserted {total_inserted} chunks")
+        return total_inserted
+
     def search(
         self,
         query_vector: list[float],
@@ -354,6 +422,35 @@ def insert_batch(data: list[dict]) -> int:
         Number of records inserted.
     """
     return get_client().insert_batch(data)
+
+
+def insert_chunks(chunks_with_embeddings: list[dict]) -> int:
+    """
+    Insert chunks with embeddings in batches using the singleton client.
+
+    This function handles large datasets by splitting them into smaller batches
+    (default 100 records per batch) to avoid memory issues and ensure reliable
+    insertion into KDB.AI.
+
+    Args:
+        chunks_with_embeddings: List of dicts with keys matching schema columns:
+            - chunk_id (str): Unique identifier for the chunk
+            - text (str): The chunk text content
+            - chapter (str): Chapter name from source document
+            - heading (str): Section heading hierarchy
+            - url (str): Source URL
+            - file_id (str): Reference to file in SQLite database
+            - embeddings (list[float]): Vector embedding (384 dimensions)
+
+    Returns:
+        Total number of records inserted.
+
+    Example:
+        >>> from src.kdbai.client import insert_chunks
+        >>> chunks = [{"chunk_id": "001", "text": "...", ...}, ...]
+        >>> inserted = insert_chunks(chunks)
+    """
+    return get_client().insert_chunks(chunks_with_embeddings)
 
 
 def search(

@@ -674,3 +674,38 @@ Progress: 18/31
 
 ### Iteration 8 - 2026-01-16T21:30:00-06:00
 Progress: 19/31
+
+### Iteration 8 - 2026-01-16T21:23:27-06:00
+Progress: 19/31
+
+### Story: embed-07 - Create embedding pipeline orchestrator
+**Completed:** 2026-01-16T21:35:00-06:00
+
+**What was implemented:**
+- Created src/embedding/main.py with full embedding pipeline orchestration
+- `run_pipeline()` function orchestrates the full embedding pipeline:
+  1. Polls SQLite database for files with status='scraped'
+  2. Reads scraped markdown content from data/raw/
+  3. Chunks content using heading-aware chunking from chunker.py
+  4. Generates embeddings using FastEmbed wrapper from embedder.py
+  5. Inserts chunks with embeddings into KDB.AI using client.py
+  6. Updates file status to 'embedded' in SQLite
+- `process_file()` helper handles individual file processing
+- `prepare_chunk_record()` creates records matching KDB.AI schema
+- CLI entry point with argparse: --config, --drop-table, --no-create-table, --verbose
+- Returns statistics dict with files_processed, files_failed, total_chunks, total_inserted
+- Proper error handling with status update to 'error' on failure
+
+**Files modified:**
+- src/embedding/main.py (created)
+
+**Learnings for future iterations:**
+- The pipeline uses lazy loading for the embedding model (first use triggers load)
+- KDB.AI table is created automatically if it doesn't exist
+- read_content() from storage.py can read files by URL
+- Each chunk gets a UUID for chunk_id
+- numpy arrays need .tolist() conversion before JSON serialization
+- embed-08 will add more detailed progress logging
+
+### Iteration 9 - 2026-01-16T21:35:00-06:00
+Progress: 20/31

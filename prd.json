@@ -161,7 +161,7 @@
       "phase": 2,
       "title": "Create embedding pipeline orchestrator",
       "description": "Create src/embedding/main.py that: polls DB for status='scraped', reads file, chunks, embeds, inserts to KDB.AI, updates status to 'embedded'.",
-      "passes": false,
+      "passes": true,
       "priority": 20
     },
     {

@@ -4,7 +4,10 @@ FastAPI application for the Q for Mortals RAG API.
 Provides endpoints for querying the Q4M documentation using semantic search.
 """
 
+import json
 import logging
+import time
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
@@ -112,6 +115,44 @@ class ErrorResponse(BaseModel):
     details: Optional[str] = Field(default=None, description="Additional error details")
 
 
+# Query logging helper
+query_logger = logging.getLogger("query_log")
+
+
+def log_query(
+    query: str,
+    num_results: int,
+    latency_ms: float,
+    chapter_filter: Optional[str] = None,
+    error: Optional[str] = None,
+):
+    """Log query information in JSON format.
+
+    Args:
+        query: The query text.
+        num_results: Number of results returned.
+        latency_ms: Query latency in milliseconds.
+        chapter_filter: Chapter filter applied (if any).
+        error: Error message (if query failed).
+    """
+    log_entry = {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "query": query[:100],  # Truncate long queries
+        "num_results": num_results,
+        "latency_ms": round(latency_ms, 2),
+        "chapter_filter": chapter_filter,
+    }
+
+    if error:
+        log_entry["error"] = error
+        log_entry["status"] = "error"
+    else:
+        log_entry["status"] = "success"
+
+    # Log as JSON for easy parsing
+    query_logger.info(json.dumps(log_entry))
+
+
 @app.post(
     "/query",
     response_model=QueryResponse,
@@ -139,6 +180,9 @@ async def query_documents(request: QueryRequest):
     filter_info = f", chapter='{request.chapter}'" if request.chapter else ""
     logger.info(f"Query received: '{request.query[:50]}...' (top_k={request.top_k}{filter_info})")
 
+    # Start timing
+    start_time = time.perf_counter()
+
     try:
         # Search for similar documents
         results = search_similar(
@@ -147,6 +191,14 @@ async def query_documents(request: QueryRequest):
             chapter_filter=request.chapter,
         )
     except ConnectionError as e:
+        latency_ms = (time.perf_counter() - start_time) * 1000
+        log_query(
+            query=request.query,
+            num_results=0,
+            latency_ms=latency_ms,
+            chapter_filter=request.chapter,
+            error="connection_error",
+        )
         logger.error(f"KDB.AI connection error: {e}")
         raise HTTPException(
             status_code=503,
@@ -157,6 +209,14 @@ async def query_documents(request: QueryRequest):
             ).model_dump(),
         )
     except ValueError as e:
+        latency_ms = (time.perf_counter() - start_time) * 1000
+        log_query(
+            query=request.query,
+            num_results=0,
+            latency_ms=latency_ms,
+            chapter_filter=request.chapter,
+            error="invalid_query",
+        )
         logger.error(f"Value error during query: {e}")
         raise HTTPException(
             status_code=400,
@@ -166,6 +226,14 @@ async def query_documents(request: QueryRequest):
             ).model_dump(),
         )
     except Exception as e:
+        latency_ms = (time.perf_counter() - start_time) * 1000
+        log_query(
+            query=request.query,
+            num_results=0,
+            latency_ms=latency_ms,
+            chapter_filter=request.chapter,
+            error="internal_error",
+        )
         logger.error(f"Unexpected error during query: {e}")
         raise HTTPException(
             status_code=500,
@@ -186,6 +254,16 @@ async def query_documents(request: QueryRequest):
             heading=result.get("heading", ""),
             url=result.get("url", ""),
         ))
+
+    # Calculate latency and log success
+    latency_ms = (time.perf_counter() - start_time) * 1000
+    log_query(
+        query=request.query,
+        num_results=len(formatted_results),
+        latency_ms=latency_ms,
+        chapter_filter=request.chapter,
+    )
+    logger.info(f"Query completed: {len(formatted_results)} results in {latency_ms:.2f}ms")
 
     return QueryResponse(
         query=request.query,

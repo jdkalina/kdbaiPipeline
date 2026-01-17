@@ -217,7 +217,7 @@
       "phase": 3,
       "title": "Add query logging and latency tracking",
       "description": "Add structured logging for each query: timestamp, query text, latency_ms, num_results. Log to stdout in JSON format.",
-      "passes": false,
+      "passes": true,
       "priority": 27
     },
     {

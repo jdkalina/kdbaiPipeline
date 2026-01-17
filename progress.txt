@@ -860,3 +860,28 @@ Progress: 25/31
 
 ### Iteration 15 - 2026-01-16T22:05:00-06:00
 Progress: 26/31
+
+### Story: query-06 - Add query logging and latency tracking
+**Completed:** 2026-01-16T22:10:00-06:00
+
+**What was implemented:**
+- Added time.perf_counter() for precise latency measurement
+- Created log_query() helper function for JSON-formatted query logs
+- Logs include: timestamp, query (truncated), num_results, latency_ms, chapter_filter, status
+- Added dedicated "query_log" logger for easy filtering
+- Logs query on both success and error paths
+- Human-readable log message also added: "Query completed: X results in Y.YYms"
+- Error logs include error type in the JSON entry
+
+**Files modified:**
+- src/api/main.py
+
+**Learnings for future iterations:**
+- time.perf_counter() is more precise than time.time() for latency
+- Separate logger name allows filtering query logs in production
+- JSON format is machine-parseable for analytics pipelines
+- Truncate query to 100 chars in logs to prevent log bloat
+- datetime.now(timezone.utc) for UTC timestamps
+
+### Iteration 16 - 2026-01-16T22:10:00-06:00
+Progress: 27/31

@@ -201,7 +201,7 @@
       "phase": 3,
       "title": "Add metadata filtering to search",
       "description": "Update /query endpoint to accept optional chapter filter. Pass to KDB.AI search as metadata filter.",
-      "passes": false,
+      "passes": true,
       "priority": 25
     },
     {

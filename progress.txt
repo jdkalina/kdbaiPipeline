@@ -810,3 +810,25 @@ Progress: 23/31
 
 ### Iteration 13 - 2026-01-16T21:55:00-06:00
 Progress: 24/31
+
+### Story: query-04 - Add metadata filtering to search
+**Completed:** 2026-01-16T22:00:00-06:00
+
+**What was implemented:**
+- Added optional `chapter` field to QueryRequest model
+- Added `chapter_filter` field to QueryResponse to echo the filter applied
+- Updated /query endpoint to pass chapter_filter to search_similar()
+- Enhanced logging to show chapter filter when applied
+- Filter is passed through to KDB.AI as metadata filter [("=", "chapter", value)]
+
+**Files modified:**
+- src/api/main.py
+
+**Learnings for future iterations:**
+- Optional[str] = None is the pattern for optional filter fields
+- Echoing filter in response helps with debugging and transparency
+- search_similar() already supported chapter_filter from query-02
+- KDB.AI filter expression format: [("=", "column", "value")]
+
+### Iteration 14 - 2026-01-16T22:00:00-06:00
+Progress: 25/31

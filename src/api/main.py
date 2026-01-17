@@ -69,6 +69,10 @@ class QueryRequest(BaseModel):
         ge=1,
         le=20,
     )
+    chapter: Optional[str] = Field(
+        default=None,
+        description="Optional chapter name to filter results",
+    )
 
 
 class SearchResult(BaseModel):
@@ -85,6 +89,10 @@ class QueryResponse(BaseModel):
     query: str = Field(..., description="The original query")
     results: list[SearchResult] = Field(..., description="Search results")
     count: int = Field(..., description="Number of results returned")
+    chapter_filter: Optional[str] = Field(
+        default=None,
+        description="Chapter filter applied (if any)",
+    )
 
 
 @app.post("/query", response_model=QueryResponse)
@@ -100,12 +108,14 @@ async def query_documents(request: QueryRequest):
     Returns:
         QueryResponse with ranked search results.
     """
-    logger.info(f"Query received: '{request.query[:50]}...' (top_k={request.top_k})")
+    filter_info = f", chapter='{request.chapter}'" if request.chapter else ""
+    logger.info(f"Query received: '{request.query[:50]}...' (top_k={request.top_k}{filter_info})")
 
     # Search for similar documents
     results = search_similar(
         query_text=request.query,
         top_k=request.top_k,
+        chapter_filter=request.chapter,
     )
 
     # Format results
@@ -123,6 +133,7 @@ async def query_documents(request: QueryRequest):
         query=request.query,
         results=formatted_results,
         count=len(formatted_results),
+        chapter_filter=request.chapter,
     )
 
 

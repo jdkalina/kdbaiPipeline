@@ -249,7 +249,7 @@
       "phase": 4,
       "title": "Add source citations to chat responses",
       "description": "Update chat to display source citations (chapter, URL) below each AI response. Make URLs clickable.",
-      "passes": false,
+      "passes": true,
       "priority": 31
     }
   ]

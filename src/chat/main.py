@@ -149,6 +149,47 @@ def generate_answer_openai(prompt: str) -> str:
         return f"Error with OpenAI: {e}"
 
 
+def format_citations(context_chunks: list[dict]) -> str:
+    """Format source citations as clickable links.
+
+    Args:
+        context_chunks: List of retrieved document chunks.
+
+    Returns:
+        Formatted markdown string with citations.
+    """
+    if not context_chunks:
+        return ""
+
+    citations = []
+    seen_urls = set()  # Avoid duplicate citations
+
+    for i, chunk in enumerate(context_chunks, 1):
+        chapter = chunk.get("chapter", "Unknown")
+        heading = chunk.get("heading", "")
+        url = chunk.get("url", "")
+
+        # Skip duplicates
+        if url and url in seen_urls:
+            continue
+        if url:
+            seen_urls.add(url)
+
+        source_name = chapter
+        if heading:
+            source_name += f" > {heading}"
+
+        if url:
+            citations.append(f"[{i}] [{source_name}]({url})")
+        else:
+            citations.append(f"[{i}] {source_name}")
+
+    if not citations:
+        return ""
+
+    return "\n\n---\n**Sources:**\n" + "\n".join(citations)
+
+
 def generate_answer(query: str, context_chunks: list[dict]) -> str:
     """Generate an answer using the configured LLM provider.
 
@@ -157,7 +198,7 @@ def generate_answer(query: str, context_chunks: list[dict]) -> str:
         context_chunks: List of retrieved document chunks.
 
     Returns:
-        The generated answer.
+        The generated answer with source citations.
     """
     if not context_chunks:
         return (
@@ -171,9 +212,14 @@ def generate_answer(query: str, context_chunks: list[dict]) -> str:
     provider = llm_config.get("provider", "ollama")
 
     if provider == "openai":
-        return generate_answer_openai(prompt)
+        answer = generate_answer_openai(prompt)
     else:
-        return generate_answer_ollama(prompt)
+        answer = generate_answer_ollama(prompt)
+
+    # Add source citations to the response
+    citations = format_citations(context_chunks)
+
+    return answer + citations
 
 
 def retrieve_context(query: str, top_k: int = 5) -> list[dict]:

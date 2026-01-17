@@ -968,3 +968,39 @@ Progress: 29/31
 
 ### Iteration 19 - 2026-01-16T22:25:00-06:00
 Progress: 30/31
+
+### Story: chat-04 - Add source citations to chat responses
+**Completed:** 2026-01-16T22:30:00-06:00
+
+**What was implemented:**
+- Added format_citations() function to generate clickable source links
+- Citations are appended below each AI response after a horizontal rule
+- Format: `[1] [Chapter > Heading](url)` with clickable markdown links
+- Deduplicates URLs to avoid redundant citations
+- Updated generate_answer() to append citations to LLM response
+- Citations include chapter name and heading hierarchy
+
+**Files modified:**
+- src/chat/main.py
+
+**Learnings for future iterations:**
+- Markdown link format: `[text](url)` works in Gradio Chatbot
+- Deduplication via seen_urls set prevents duplicate source listings
+- Appending to response keeps citations with their context
+- Numbered citations [1], [2] match the numbered sources in the RAG prompt
+
+### Iteration 20 - 2026-01-16T22:30:00-06:00
+Progress: 31/31
+
+---
+
+## Project Complete!
+
+All 31 stories have been implemented:
+- Phase 0 (Setup): 4 stories
+- Phase 1 (Scraping): 9 stories
+- Phase 2 (Embedding): 8 stories
+- Phase 3 (Query API): 6 stories
+- Phase 4 (Chat Interface): 4 stories
+
+The Q for Mortals RAG Agent is now fully functional!

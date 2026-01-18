@@ -56,7 +56,7 @@ embedding:
 # =============================================================================
 kdbai:
   # KDB.AI endpoint (can be overridden by KDBAI_ENDPOINT env var)
-  endpoint: "http://192.168.1.68:8082"
+  endpoint: "http://localhost:8082"
 
   # Database name
   database: "default"
